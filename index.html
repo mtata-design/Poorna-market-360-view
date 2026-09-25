@@ -3,21 +3,23 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Poorna Market 360° AR VR Visualizer</title>
-  
-  <!-- Include Three.js library -->
+  <title>Poorna Market 360° AR/VR Visualizer</title>
+
+  <!-- Three.js Engine & WebXR Polyfills -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
   <style>
     :root {
-      --bg-dark: rgba(15, 23, 42, 0.88);
+      --bg-glass: rgba(15, 23, 42, 0.88);
       --primary: #00f2fe;
       --accent: #4facfe;
       --text: #f8fafc;
       --border: rgba(255, 255, 255, 0.15);
+      --active-gold: #fbbf24;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
       font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
       background-color: #090d16;
@@ -33,39 +35,48 @@
       display: block;
     }
 
-    /* Floating Desktop / Quest Flat Overlay UI */
+    /* Spatial Floating UI Control Panel */
     #ui-container {
       position: absolute;
       top: 20px;
       left: 20px;
       width: 360px;
-      background: var(--bg-dark);
-      backdrop-filter: blur(12px);
+      background: var(--bg-glass);
+      backdrop-filter: blur(16px);
       border: 1px solid var(--border);
       border-radius: 16px;
       padding: 20px;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.6);
       z-index: 10;
-      transition: all 0.3s ease;
+      transition: opacity 0.3s ease;
     }
 
-    h1 {
+    .brand-title {
       font-size: 1.1rem;
       font-weight: 700;
       color: var(--primary);
-      margin-bottom: 4px;
       text-transform: uppercase;
       letter-spacing: 1px;
+      margin-bottom: 2px;
     }
 
-    p.subtitle {
+    .brand-sub {
       font-size: 0.8rem;
       color: #94a3b8;
       margin-bottom: 16px;
     }
 
+    .section-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: #64748b;
+      margin: 12px 0 6px 0;
+      font-weight: 700;
+    }
+
     .control-group {
-      margin-bottom: 14px;
+      margin-bottom: 12px;
     }
 
     .control-group label {
@@ -92,20 +103,20 @@
     .btn-group {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-top: 16px;
+      gap: 8px;
+      margin-top: 8px;
     }
 
     button {
       background: linear-gradient(135deg, var(--accent), var(--primary));
       border: none;
       color: #090d16;
-      padding: 10px 14px;
+      padding: 10px 12px;
       font-weight: 700;
-      font-size: 0.85rem;
+      font-size: 0.82rem;
       border-radius: 8px;
       cursor: pointer;
-      transition: transform 0.1s ease, filter 0.2s;
+      transition: transform 0.1s ease, filter 0.2s, background 0.3s;
     }
 
     button:hover { filter: brightness(1.15); }
@@ -117,28 +128,42 @@
       color: var(--text);
     }
 
+    button.active-scheme {
+      background: var(--active-gold) !important;
+      color: #000 !important;
+      border-color: var(--active-gold) !important;
+    }
+
+    /* WebXR Quest Trigger Button */
     #vr-button {
       position: absolute;
       bottom: 24px;
       right: 24px;
       padding: 14px 28px;
-      font-size: 1rem;
+      font-size: 0.95rem;
       border-radius: 30px;
       box-shadow: 0 0 20px rgba(0, 242, 254, 0.4);
       z-index: 10;
     }
 
-    /* Spatial VR Instruction Badge */
+    /* Spatial Guidance Banner */
     #vr-instructions {
       position: absolute;
       bottom: 24px;
       left: 24px;
-      background: var(--bg-dark);
+      background: var(--bg-glass);
       padding: 10px 16px;
       border-radius: 8px;
       border: 1px solid var(--border);
       font-size: 0.8rem;
       color: #94a3b8;
+    }
+
+    .loading-notice {
+      font-size: 0.72rem;
+      color: #fbbf24;
+      margin-top: 10px;
+      display: none;
     }
   </style>
 </head>
@@ -146,44 +171,64 @@
 
   <canvas id="webgl-canvas"></canvas>
 
-  <!-- UI Control Panel -->
+  <!-- Spatial UI Control Panel -->
   <div id="ui-container">
-    <h1>Poorna Market 360° AR</h1>
-    <p class="subtitle">VR Site & Design Overlay Tool</p>
+    <div class="brand-title">Poorna Market 360° AR</div>
+    <div class="brand-sub">Architectural Design Scheme Comparison</div>
 
-    <div class="control-group">
-      <label>Enscape Design Opacity <span id="opacity-val" class="val">50%</span></label>
-      <input type="range" id="opacity-slider" min="0" max="1" step="0.01" value="0.5" />
+    <div class="section-label">1. Select Design Scheme</div>
+    <div class="btn-group">
+      <button id="btn-scheme1" class="active-scheme">Scheme A</button>
+      <button id="btn-scheme2" class="secondary">Scheme B</button>
     </div>
 
+    <div class="section-label">2. AR Opacity Blend</div>
     <div class="control-group">
-      <label>Rotation Alignment (Yaw) <span id="yaw-val" class="val">0°</span></label>
+      <label>Overlay Opacity <span id="opacity-val" class="val">50%</span></label>
+      <input type="range" id="opacity-slider" min="0" max="1" step="0.01" value="0.5" />
+    </div>
+    <div class="btn-group">
+      <button id="preset-site" class="secondary">100% Site</button>
+      <button id="preset-render" class="secondary">100% Render</button>
+    </div>
+
+    <div class="section-label">3. Site Alignment</div>
+    <div class="control-group">
+      <label>Yaw (Rotation) <span id="yaw-val" class="val">0°</span></label>
       <input type="range" id="yaw-slider" min="-180" max="180" step="0.5" value="0" />
     </div>
 
     <div class="control-group">
-      <label>Pitch Alignment <span id="pitch-val" class="val">0°</span></label>
+      <label>Pitch (Tilt) <span id="pitch-val" class="val">0°</span></label>
       <input type="range" id="pitch-slider" min="-30" max="30" step="0.5" value="0" />
     </div>
 
-    <div class="btn-group">
-      <button id="preset-site" class="secondary">100% Site</button>
-      <button id="preset-render">100% Render</button>
+    <div id="file-warning" class="loading-notice">
+      * Displaying fallback grid textures. Upload site.jpg, option1.jpg, option2.jpg to GitHub root to view real renders.
     </div>
   </div>
 
   <div id="vr-instructions">
-    Desktop: Left Click + Drag to Look Around | Scroll to Zoom
+    Desktop: Click + Drag to look | Scroll to zoom
   </div>
 
   <button id="vr-button">ENTER VR (META QUEST)</button>
 
   <script>
-    // --- Global Variables ---
+    // --- File Name Definitions (Root Folder Paths) ---
+    const SITE_IMAGE_PATH = 'site.jpg';
+    const SCHEME_1_PATH   = 'option1.jpg';
+    const SCHEME_2_PATH   = 'option2.jpg';
+
+    // --- Global Application State ---
     let scene, camera, renderer;
     let siteSphere, renderSphere;
     let renderMaterial;
-    let isUserInteracting = false, onPointerDownPointerX = 0, onPointerDownPointerY = 0;
+    let scheme1Texture, scheme2Texture;
+    
+    // Desktop Camera Controls
+    let isUserInteracting = false;
+    let onPointerDownPointerX = 0, onPointerDownPointerY = 0;
     let lon = 0, onPointerDownLon = 0, lat = 0, onPointerDownLat = 0;
     let phi = 0, theta = 0;
 
@@ -193,55 +238,87 @@
     function init() {
       const canvas = document.getElementById('webgl-canvas');
 
-      // 1. Scene Setup
+      // 1. Initialize Scene
       scene = new THREE.Scene();
 
-      // 2. Camera Setup
+      // 2. Initialize Camera
       camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
       camera.target = new THREE.Vector3(0, 0, 0);
 
-      // 3. Renderer Setup with WebXR Enabled
+      // 3. Initialize WebGL Renderer with WebXR Enablement
       renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
       renderer.setPixelRatio(window.devicePixelRatio);
       renderer.setSize(window.innerWidth, window.innerHeight);
-      renderer.xr.enabled = true; // WebXR capability for Meta Quest
+      renderer.xr.enabled = true;
 
-      // 4. Create Inverted Spheres for 360 Panoramas
+      // 4. Geometry Setup (Inverted Sphere for Equirectangular View)
       const geometry = new THREE.SphereGeometry(500, 60, 40);
-      geometry.scale(-1, 1, 1); // Invert sphere so images map inside
+      geometry.scale(-1, 1, 1);
 
-      // Layer 1: Existing Site 360 Texture (Procedural Canvas Generated for Demo)
-      const siteTexture = createProcedural360Texture('#1e293b', 'EXISTING SITE PHOTO (360°)');
+      // 5. Texture Loader with Fallback Generators
+      const textureLoader = new THREE.TextureLoader();
+
+      // Load Site Photo
+      const siteTexture = textureLoader.load(
+        SITE_IMAGE_PATH,
+        undefined,
+        undefined,
+        () => {
+          // Texture missing fallback grid
+          siteSphere.material.map = createFallbackTexture('#1e293b', 'EXISTING SITE PHOTO (site.jpg)');
+          siteSphere.material.needsUpdate = true;
+          document.getElementById('file-warning').style.display = 'block';
+        }
+      );
       const siteMaterial = new THREE.MeshBasicMaterial({ map: siteTexture });
       siteSphere = new THREE.Mesh(geometry, siteMaterial);
       scene.add(siteSphere);
 
-      // Layer 2: Enscape Rendered Design 360 Texture
-      const renderTexture = createProcedural360Texture('#0f766e', 'ENSCAPE PROPOSED DESIGN (360°)');
+      // Preload Design Schemes
+      scheme1Texture = textureLoader.load(
+        SCHEME_1_PATH,
+        undefined,
+        undefined,
+        () => {
+          scheme1Texture = createFallbackTexture('#0f766e', 'ENSCAPE SCHEME A (option1.jpg)');
+          if (renderMaterial) {
+            renderMaterial.map = scheme1Texture;
+            renderMaterial.needsUpdate = true;
+          }
+        }
+      );
+
+      scheme2Texture = textureLoader.load(
+        SCHEME_2_PATH,
+        undefined,
+        undefined,
+        () => {
+          scheme2Texture = createFallbackTexture('#4338ca', 'ENSCAPE SCHEME B (option2.jpg)');
+        }
+      );
+
+      // Layer 2: AR Overlay Sphere
       renderMaterial = new THREE.MeshBasicMaterial({
-        map: renderTexture,
+        map: scheme1Texture,
         transparent: true,
         opacity: 0.5
       });
       renderSphere = new THREE.Mesh(geometry, renderMaterial);
       scene.add(renderSphere);
 
-      // 5. DOM Control Bindings
+      // 6. Register Controls & Handlers
       setupUIControls();
+      setupWebXRButton();
 
-      // 6. Interaction Listeners for Non-VR Viewport
       window.addEventListener('resize', onWindowResize);
       canvas.addEventListener('pointerdown', onPointerDown);
       canvas.addEventListener('pointermove', onPointerMove);
       canvas.addEventListener('pointerup', onPointerUp);
       canvas.addEventListener('wheel', onDocumentMouseWheel);
-
-      // 7. WebXR Session Controller setup
-      setupWebXRButton();
     }
 
-    // Generate Canvas Textures for instant preview (Replace with actual image loading in production)
-    function createProcedural360Texture(bgColor, label) {
+    // Dynamic Fallback Texture Generator
+    function createFallbackTexture(bgColor, label) {
       const canvas = document.createElement('canvas');
       canvas.width = 2048;
       canvas.height = 1024;
@@ -250,7 +327,6 @@
       ctx.fillStyle = bgColor;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Draw Grid lines
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
       ctx.lineWidth = 4;
       for (let x = 0; x < canvas.width; x += 128) {
@@ -260,23 +336,44 @@
         ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
       }
 
-      // Draw Horizon Line
       ctx.strokeStyle = '#00f2fe';
       ctx.lineWidth = 8;
       ctx.beginPath(); ctx.moveTo(0, canvas.height/2); ctx.lineTo(canvas.width, canvas.height/2); ctx.stroke();
 
-      // Draw Text
       ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 72px sans-serif';
+      ctx.font = 'bold 64px sans-serif';
       ctx.textAlign = 'center';
       ctx.fillText(label, canvas.width / 2, canvas.height / 2 - 20);
-      ctx.font = '36px sans-serif';
-      ctx.fillText('Replace with your exported Enscape 360 panorama image file', canvas.width / 2, canvas.height / 2 + 50);
+      ctx.font = '32px sans-serif';
+      ctx.fillText('Upload corresponding image file to GitHub root folder to replace this', canvas.width / 2, canvas.height / 2 + 50);
 
       return new THREE.CanvasTexture(canvas);
     }
 
     function setupUIControls() {
+      // Scheme Switching Logic
+      const btn1 = document.getElementById('btn-scheme1');
+      const btn2 = document.getElementById('btn-scheme2');
+
+      btn1.addEventListener('click', () => {
+        renderMaterial.map = scheme1Texture;
+        renderMaterial.needsUpdate = true;
+        btn1.classList.add('active-scheme');
+        btn1.classList.remove('secondary');
+        btn2.classList.remove('active-scheme');
+        btn2.classList.add('secondary');
+      });
+
+      btn2.addEventListener('click', () => {
+        renderMaterial.map = scheme2Texture;
+        renderMaterial.needsUpdate = true;
+        btn2.classList.add('active-scheme');
+        btn2.classList.remove('secondary');
+        btn1.classList.remove('active-scheme');
+        btn1.classList.add('secondary');
+      });
+
+      // Opacity Slider
       const opacitySlider = document.getElementById('opacity-slider');
       const opacityVal = document.getElementById('opacity-val');
       opacitySlider.addEventListener('input', (e) => {
@@ -285,6 +382,7 @@
         opacityVal.textContent = Math.round(val * 100) + '%';
       });
 
+      // Alignment Sliders
       const yawSlider = document.getElementById('yaw-slider');
       const yawVal = document.getElementById('yaw-val');
       yawSlider.addEventListener('input', (e) => {
@@ -301,6 +399,7 @@
         pitchVal.textContent = val + '°';
       });
 
+      // Presets
       document.getElementById('preset-site').addEventListener('click', () => {
         opacitySlider.value = 0;
         opacitySlider.dispatchEvent(new Event('input'));
@@ -331,12 +430,12 @@
           }
         });
       } else {
-        vrButton.textContent = 'WEBXR NOT AVAILABLE (HTTPS REQUIRED)';
+        vrButton.textContent = 'WEBXR REQUIRES HTTPS (GITHUB PAGES)';
         vrButton.disabled = true;
       }
     }
 
-    // --- Desktop Camera Interaction Helpers ---
+    // Viewport Controls
     function onPointerDown(event) {
       isUserInteracting = true;
       onPointerDownPointerX = event.clientX;
@@ -346,15 +445,13 @@
     }
 
     function onPointerMove(event) {
-      if (isUserInteracting === true) {
+      if (isUserInteracting) {
         lon = (onPointerDownPointerX - event.clientX) * 0.1 + onPointerDownLon;
         lat = (event.clientY - onPointerDownPointerY) * 0.1 + onPointerDownLat;
       }
     }
 
-    function onPointerUp() {
-      isUserInteracting = false;
-    }
+    function onPointerUp() { isUserInteracting = false; }
 
     function onDocumentMouseWheel(event) {
       const fov = camera.fov + event.deltaY * 0.05;
@@ -368,13 +465,12 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
     }
 
-    // --- Animation Loop ---
+    // Render Loop
     function animate() {
       renderer.setAnimationLoop(render);
     }
 
     function render() {
-      // If not in VR session, manual navigation mode applies
       if (!renderer.xr.isPresenting) {
         lat = Math.max(-85, Math.min(85, lat));
         phi = THREE.MathUtils.degToRad(90 - lat);
