@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Poorna Market 360° AR VR Visualizer</title>
+  
+  <!-- Include Three.js library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+  <style>
+    :root {
+      --bg-dark: rgba(15, 23, 42, 0.88);
+      --primary: #00f2fe;
+      --accent: #4facfe;
+      --text: #f8fafc;
+      --border: rgba(255, 255, 255, 0.15);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background-color: #090d16;
+      color: var(--text);
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    #webgl-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* Floating Desktop / Quest Flat Overlay UI */
+    #ui-container {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      width: 360px;
+      background: var(--bg-dark);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+      z-index: 10;
+      transition: all 0.3s ease;
+    }
+
+    h1 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    p.subtitle {
+      font-size: 0.8rem;
+      color: #94a3b8;
+      margin-bottom: 16px;
+    }
+
+    .control-group {
+      margin-bottom: 14px;
+    }
+
+    .control-group label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .control-group label span.val {
+      color: var(--primary);
+    }
+
+    input[type="range"] {
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: #334155;
+      outline: none;
+      accent-color: var(--primary);
+    }
+
+    .btn-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    button {
+      background: linear-gradient(135deg, var(--accent), var(--primary));
+      border: none;
+      color: #090d16;
+      padding: 10px 14px;
+      font-weight: 700;
+      font-size: 0.85rem;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: transform 0.1s ease, filter 0.2s;
+    }
+
+    button:hover { filter: brightness(1.15); }
+    button:active { transform: scale(0.97); }
+
+    button.secondary {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    #vr-button {
+      position: absolute;
+      bottom: 24px;
+      right: 24px;
+      padding: 14px 28px;
+      font-size: 1rem;
+      border-radius: 30px;
+      box-shadow: 0 0 20px rgba(0, 242, 254, 0.4);
+      z-index: 10;
+    }
+
+    /* Spatial VR Instruction Badge */
+    #vr-instructions {
+      position: absolute;
+      bottom: 24px;
+      left: 24px;
+      background: var(--bg-dark);
+      padding: 10px 16px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      font-size: 0.8rem;
+      color: #94a3b8;
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="webgl-canvas"></canvas>
+
+  <!-- UI Control Panel -->
+  <div id="ui-container">
+    <h1>Poorna Market 360° AR</h1>
+    <p class="subtitle">VR Site & Design Overlay Tool</p>
+
+    <div class="control-group">
+      <label>Enscape Design Opacity <span id="opacity-val" class="val">50%</span></label>
+      <input type="range" id="opacity-slider" min="0" max="1" step="0.01" value="0.5" />
+    </div>
+
+    <div class="control-group">
+      <label>Rotation Alignment (Yaw) <span id="yaw-val" class="val">0°</span></label>
+      <input type="range" id="yaw-slider" min="-180" max="180" step="0.5" value="0" />
+    </div>
+
+    <div class="control-group">
+      <label>Pitch Alignment <span id="pitch-val" class="val">0°</span></label>
+      <input type="range" id="pitch-slider" min="-30" max="30" step="0.5" value="0" />
+    </div>
+
+    <div class="btn-group">
+      <button id="preset-site" class="secondary">100% Site</button>
+      <button id="preset-render">100% Render</button>
+    </div>
+  </div>
+
+  <div id="vr-instructions">
+    Desktop: Left Click + Drag to Look Around | Scroll to Zoom
+  </div>
+
+  <button id="vr-button">ENTER VR (META QUEST)</button>
+
+  <script>
+    // --- Global Variables ---
+    let scene, camera, renderer;
+    let siteSphere, renderSphere;
+    let renderMaterial;
+    let isUserInteracting = false, onPointerDownPointerX = 0, onPointerDownPointerY = 0;
+    let lon = 0, onPointerDownLon = 0, lat = 0, onPointerDownLat = 0;
+    let phi = 0, theta = 0;
+
+    init();
+    animate();
+
+    function init() {
+      const canvas = document.getElementById('webgl-canvas');
+
+      // 1. Scene Setup
+      scene = new THREE.Scene();
+
+      // 2. Camera Setup
+      camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+      camera.target = new THREE.Vector3(0, 0, 0);
+
+      // 3. Renderer Setup with WebXR Enabled
+      renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+      renderer.setPixelRatio(window.devicePixelRatio);
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.xr.enabled = true; // WebXR capability for Meta Quest
+
+      // 4. Create Inverted Spheres for 360 Panoramas
+      const geometry = new THREE.SphereGeometry(500, 60, 40);
+      geometry.scale(-1, 1, 1); // Invert sphere so images map inside
+
+      // Layer 1: Existing Site 360 Texture (Procedural Canvas Generated for Demo)
+      const siteTexture = createProcedural360Texture('#1e293b', 'EXISTING SITE PHOTO (360°)');
+      const siteMaterial = new THREE.MeshBasicMaterial({ map: siteTexture });
+      siteSphere = new THREE.Mesh(geometry, siteMaterial);
+      scene.add(siteSphere);
+
+      // Layer 2: Enscape Rendered Design 360 Texture
+      const renderTexture = createProcedural360Texture('#0f766e', 'ENSCAPE PROPOSED DESIGN (360°)');
+      renderMaterial = new THREE.MeshBasicMaterial({
+        map: renderTexture,
+        transparent: true,
+        opacity: 0.5
+      });
+      renderSphere = new THREE.Mesh(geometry, renderMaterial);
+      scene.add(renderSphere);
+
+      // 5. DOM Control Bindings
+      setupUIControls();
+
+      // 6. Interaction Listeners for Non-VR Viewport
+      window.addEventListener('resize', onWindowResize);
+      canvas.addEventListener('pointerdown', onPointerDown);
+      canvas.addEventListener('pointermove', onPointerMove);
+      canvas.addEventListener('pointerup', onPointerUp);
+      canvas.addEventListener('wheel', onDocumentMouseWheel);
+
+      // 7. WebXR Session Controller setup
+      setupWebXRButton();
+    }
+
+    // Generate Canvas Textures for instant preview (Replace with actual image loading in production)
+    function createProcedural360Texture(bgColor, label) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 2048;
+      canvas.height = 1024;
+      const ctx = canvas.getContext('2d');
+
+      ctx.fillStyle = bgColor;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Draw Grid lines
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+      ctx.lineWidth = 4;
+      for (let x = 0; x < canvas.width; x += 128) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+      }
+      for (let y = 0; y < canvas.height; y += 128) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+      }
+
+      // Draw Horizon Line
+      ctx.strokeStyle = '#00f2fe';
+      ctx.lineWidth = 8;
+      ctx.beginPath(); ctx.moveTo(0, canvas.height/2); ctx.lineTo(canvas.width, canvas.height/2); ctx.stroke();
+
+      // Draw Text
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 72px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(label, canvas.width / 2, canvas.height / 2 - 20);
+      ctx.font = '36px sans-serif';
+      ctx.fillText('Replace with your exported Enscape 360 panorama image file', canvas.width / 2, canvas.height / 2 + 50);
+
+      return new THREE.CanvasTexture(canvas);
+    }
+
+    function setupUIControls() {
+      const opacitySlider = document.getElementById('opacity-slider');
+      const opacityVal = document.getElementById('opacity-val');
+      opacitySlider.addEventListener('input', (e) => {
+        const val = parseFloat(e.target.value);
+        renderMaterial.opacity = val;
+        opacityVal.textContent = Math.round(val * 100) + '%';
+      });
+
+      const yawSlider = document.getElementById('yaw-slider');
+      const yawVal = document.getElementById('yaw-val');
+      yawSlider.addEventListener('input', (e) => {
+        const val = parseFloat(e.target.value);
+        renderSphere.rotation.y = THREE.MathUtils.degToRad(val);
+        yawVal.textContent = val + '°';
+      });
+
+      const pitchSlider = document.getElementById('pitch-slider');
+      const pitchVal = document.getElementById('pitch-val');
+      pitchSlider.addEventListener('input', (e) => {
+        const val = parseFloat(e.target.value);
+        renderSphere.rotation.x = THREE.MathUtils.degToRad(val);
+        pitchVal.textContent = val + '°';
+      });
+
+      document.getElementById('preset-site').addEventListener('click', () => {
+        opacitySlider.value = 0;
+        opacitySlider.dispatchEvent(new Event('input'));
+      });
+
+      document.getElementById('preset-render').addEventListener('click', () => {
+        opacitySlider.value = 1;
+        opacitySlider.dispatchEvent(new Event('input'));
+      });
+    }
+
+    function setupWebXRButton() {
+      const vrButton = document.getElementById('vr-button');
+      if ('xr' in navigator) {
+        navigator.xr.isSessionSupported('immersive-vr').then((supported) => {
+          if (supported) {
+            vrButton.addEventListener('click', () => {
+              navigator.xr.requestSession('immersive-vr', {
+                optionalFeatures: ['local-floor', 'bounded-floor']
+              }).then((session) => {
+                renderer.xr.setSession(session);
+                vrButton.style.display = 'none';
+              });
+            });
+          } else {
+            vrButton.textContent = 'VR NOT SUPPORTED ON THIS DEVICE';
+            vrButton.disabled = true;
+          }
+        });
+      } else {
+        vrButton.textContent = 'WEBXR NOT AVAILABLE (HTTPS REQUIRED)';
+        vrButton.disabled = true;
+      }
+    }
+
+    // --- Desktop Camera Interaction Helpers ---
+    function onPointerDown(event) {
+      isUserInteracting = true;
+      onPointerDownPointerX = event.clientX;
+      onPointerDownPointerY = event.clientY;
+      onPointerDownLon = lon;
+      onPointerDownLat = lat;
+    }
+
+    function onPointerMove(event) {
+      if (isUserInteracting === true) {
+        lon = (onPointerDownPointerX - event.clientX) * 0.1 + onPointerDownLon;
+        lat = (event.clientY - onPointerDownPointerY) * 0.1 + onPointerDownLat;
+      }
+    }
+
+    function onPointerUp() {
+      isUserInteracting = false;
+    }
+
+    function onDocumentMouseWheel(event) {
+      const fov = camera.fov + event.deltaY * 0.05;
+      camera.fov = THREE.MathUtils.clamp(fov, 30, 90);
+      camera.updateProjectionMatrix();
+    }
+
+    function onWindowResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    // --- Animation Loop ---
+    function animate() {
+      renderer.setAnimationLoop(render);
+    }
+
+    function render() {
+      // If not in VR session, manual navigation mode applies
+      if (!renderer.xr.isPresenting) {
+        lat = Math.max(-85, Math.min(85, lat));
+        phi = THREE.MathUtils.degToRad(90 - lat);
+        theta = THREE.MathUtils.degToRad(lon);
+
+        camera.target.x = 500 * Math.sin(phi) * Math.cos(theta);
+        camera.target.y = 500 * Math.cos(phi);
+        camera.target.z = 500 * Math.sin(phi) * Math.sin(theta);
+
+        camera.lookAt(camera.target);
+      }
+
+      renderer.render(scene, camera);
+    }
+  </script>
+</body>
+</html>
