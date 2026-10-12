@@ -1,490 +1,903 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Poorna Market 360° AR/VR Visualizer</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Poorna Market | A People's Market</title>
 
-  <!-- Three.js Engine & WebXR Polyfills -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-
-  <style>
-    :root {
-      --bg-glass: rgba(15, 23, 42, 0.88);
-      --primary: #00f2fe;
-      --accent: #4facfe;
-      --text: #f8fafc;
-      --border: rgba(255, 255, 255, 0.15);
-      --active-gold: #fbbf24;
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-      background-color: #090d16;
-      color: var(--text);
-      overflow: hidden;
-      width: 100vw;
-      height: 100vh;
-    }
-
-    #webgl-canvas {
-      width: 100%;
-      height: 100%;
-      display: block;
-    }
-
-    /* Spatial Floating UI Control Panel */
-    #ui-container {
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      width: 360px;
-      background: var(--bg-glass);
-      backdrop-filter: blur(16px);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 20px;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.6);
-      z-index: 10;
-      transition: opacity 0.3s ease;
-    }
-
-    .brand-title {
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: var(--primary);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-bottom: 2px;
-    }
-
-    .brand-sub {
-      font-size: 0.8rem;
-      color: #94a3b8;
-      margin-bottom: 16px;
-    }
-
-    .section-label {
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-      color: #64748b;
-      margin: 12px 0 6px 0;
-      font-weight: 700;
-    }
-
-    .control-group {
-      margin-bottom: 12px;
-    }
-
-    .control-group label {
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.85rem;
-      font-weight: 600;
-      margin-bottom: 6px;
-    }
-
-    .control-group label span.val {
-      color: var(--primary);
-    }
-
-    input[type="range"] {
-      width: 100%;
-      height: 6px;
-      border-radius: 3px;
-      background: #334155;
-      outline: none;
-      accent-color: var(--primary);
-    }
-
-    .btn-group {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      margin-top: 8px;
-    }
-
-    button {
-      background: linear-gradient(135deg, var(--accent), var(--primary));
-      border: none;
-      color: #090d16;
-      padding: 10px 12px;
-      font-weight: 700;
-      font-size: 0.82rem;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: transform 0.1s ease, filter 0.2s, background 0.3s;
-    }
-
-    button:hover { filter: brightness(1.15); }
-    button:active { transform: scale(0.97); }
-
-    button.secondary {
-      background: transparent;
-      border: 1px solid var(--border);
-      color: var(--text);
-    }
-
-    button.active-scheme {
-      background: var(--active-gold) !important;
-      color: #000 !important;
-      border-color: var(--active-gold) !important;
-    }
-
-    /* WebXR Quest Trigger Button */
-    #vr-button {
-      position: absolute;
-      bottom: 24px;
-      right: 24px;
-      padding: 14px 28px;
-      font-size: 0.95rem;
-      border-radius: 30px;
-      box-shadow: 0 0 20px rgba(0, 242, 254, 0.4);
-      z-index: 10;
-    }
-
-    /* Spatial Guidance Banner */
-    #vr-instructions {
-      position: absolute;
-      bottom: 24px;
-      left: 24px;
-      background: var(--bg-glass);
-      padding: 10px 16px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      font-size: 0.8rem;
-      color: #94a3b8;
-    }
-
-    .loading-notice {
-      font-size: 0.72rem;
-      color: #fbbf24;
-      margin-top: 10px;
-      display: none;
-    }
-  </style>
-</head>
-<body>
-
-  <canvas id="webgl-canvas"></canvas>
-
-  <!-- Spatial UI Control Panel -->
-  <div id="ui-container">
-    <div class="brand-title">Poorna Market 360° AR</div>
-    <div class="brand-sub">Architectural Design Scheme Comparison</div>
-
-    <div class="section-label">1. Select Design Scheme</div>
-    <div class="btn-group">
-      <button id="btn-scheme1" class="active-scheme">Scheme A</button>
-      <button id="btn-scheme2" class="secondary">Scheme B</button>
-    </div>
-
-    <div class="section-label">2. AR Opacity Blend</div>
-    <div class="control-group">
-      <label>Overlay Opacity <span id="opacity-val" class="val">50%</span></label>
-      <input type="range" id="opacity-slider" min="0" max="1" step="0.01" value="0.5" />
-    </div>
-    <div class="btn-group">
-      <button id="preset-site" class="secondary">100% Site</button>
-      <button id="preset-render" class="secondary">100% Render</button>
-    </div>
-
-    <div class="section-label">3. Site Alignment</div>
-    <div class="control-group">
-      <label>Yaw (Rotation) <span id="yaw-val" class="val">0°</span></label>
-      <input type="range" id="yaw-slider" min="-180" max="180" step="0.5" value="0" />
-    </div>
-
-    <div class="control-group">
-      <label>Pitch (Tilt) <span id="pitch-val" class="val">0°</span></label>
-      <input type="range" id="pitch-slider" min="-30" max="30" step="0.5" value="0" />
-    </div>
-
-    <div id="file-warning" class="loading-notice">
-      * Displaying fallback grid textures. Upload site.jpg, option1.jpg, option2.jpg to GitHub root to view real renders.
-    </div>
-  </div>
-
-  <div id="vr-instructions">
-    Desktop: Click + Drag to look | Scroll to zoom
-  </div>
-
-  <button id="vr-button">ENTER VR (META QUEST)</button>
-
-  <script>
-    // --- File Name Definitions (Root Folder Paths) ---
-    const SITE_IMAGE_PATH = 'site.jpg';
-    const SCHEME_1_PATH   = 'option1.jpg';
-    const SCHEME_2_PATH   = 'option2.jpg';
-
-    // --- Global Application State ---
-    let scene, camera, renderer;
-    let siteSphere, renderSphere;
-    let renderMaterial;
-    let scheme1Texture, scheme2Texture;
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
     
-    // Desktop Camera Controls
-    let isUserInteracting = false;
-    let onPointerDownPointerX = 0, onPointerDownPointerY = 0;
-    let lon = 0, onPointerDownLon = 0, lat = 0, onPointerDownLat = 0;
-    let phi = 0, theta = 0;
+    <!-- Google Fonts: Playfair Display (Serif) & Inter (Sans) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    
+    <!-- Phosphor Icons for elegant UI iconography -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
 
-    init();
-    animate();
+    <!-- Three.js & WebXR -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
-    function init() {
-      const canvas = document.getElementById('webgl-canvas');
-
-      // 1. Initialize Scene
-      scene = new THREE.Scene();
-
-      // 2. Initialize Camera
-      camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-      camera.target = new THREE.Vector3(0, 0, 0);
-
-      // 3. Initialize WebGL Renderer with WebXR Enablement
-      renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
-      renderer.setPixelRatio(window.devicePixelRatio);
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      renderer.xr.enabled = true;
-
-      // 4. Geometry Setup (Inverted Sphere for Equirectangular View)
-      const geometry = new THREE.SphereGeometry(500, 60, 40);
-      geometry.scale(-1, 1, 1);
-
-      // 5. Texture Loader with Fallback Generators
-      const textureLoader = new THREE.TextureLoader();
-
-      // Load Site Photo
-      const siteTexture = textureLoader.load(
-        SITE_IMAGE_PATH,
-        undefined,
-        undefined,
-        () => {
-          // Texture missing fallback grid
-          siteSphere.material.map = createFallbackTexture('#1e293b', 'EXISTING SITE PHOTO (site.jpg)');
-          siteSphere.material.needsUpdate = true;
-          document.getElementById('file-warning').style.display = 'block';
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            red: '#7B2E24',
+                            vintage: '#EFE7DB',
+                            dark: '#1C1917',
+                            muted: '#78716C'
+                        }
+                    },
+                    fontFamily: {
+                        serif: ['"Playfair Display"', 'serif'],
+                        sans: ['"Inter"', 'sans-serif'],
+                    }
+                }
+            }
         }
-      );
-      const siteMaterial = new THREE.MeshBasicMaterial({ map: siteTexture });
-      siteSphere = new THREE.Mesh(geometry, siteMaterial);
-      scene.add(siteSphere);
+    </script>
 
-      // Preload Design Schemes
-      scheme1Texture = textureLoader.load(
-        SCHEME_1_PATH,
-        undefined,
-        undefined,
-        () => {
-          scheme1Texture = createFallbackTexture('#0f766e', 'ENSCAPE SCHEME A (option1.jpg)');
-          if (renderMaterial) {
-            renderMaterial.map = scheme1Texture;
-            renderMaterial.needsUpdate = true;
-          }
+    <style>
+        body {
+            background-color: #EFE7DB;
+            overflow: hidden; /* Handle scrolling inside sections */
         }
-      );
 
-      scheme2Texture = textureLoader.load(
-        SCHEME_2_PATH,
-        undefined,
-        undefined,
-        () => {
-          scheme2Texture = createFallbackTexture('#4338ca', 'ENSCAPE SCHEME B (option2.jpg)');
+        /* SPA Section Morphing */
+        .page-section {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.8s cubic-bezier(0.64, 0, 0.78, 0);
+            transform: scale(1.02);
+            visibility: hidden;
+            z-index: 0;
         }
-      );
 
-      // Layer 2: AR Overlay Sphere
-      renderMaterial = new THREE.MeshBasicMaterial({
-        map: scheme1Texture,
-        transparent: true,
-        opacity: 0.5
-      });
-      renderSphere = new THREE.Mesh(geometry, renderMaterial);
-      scene.add(renderSphere);
+        .page-section.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: scale(1);
+            visibility: visible;
+            z-index: 10;
+        }
 
-      // 6. Register Controls & Handlers
-      setupUIControls();
-      setupWebXRButton();
+        /* Split Background Effect for Home */
+        .split-bg-container {
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            display: flex;
+            background: #EFE7DB;
+        }
+        
+        .split-left {
+            width: 55%;
+            height: 100%;
+            background-image: url('https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?q=80&w=2000&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            filter: sepia(0.8) grayscale(0.5) contrast(1.2) brightness(0.9);
+            mask-image: linear-gradient(to right, rgba(0,0,0,1) 70%, rgba(0,0,0,0) 100%);
+            -webkit-mask-image: linear-gradient(to right, rgba(0,0,0,1) 80%, rgba(0,0,0,0) 100%);
+        }
 
-      window.addEventListener('resize', onWindowResize);
-      canvas.addEventListener('pointerdown', onPointerDown);
-      canvas.addEventListener('pointermove', onPointerMove);
-      canvas.addEventListener('pointerup', onPointerUp);
-      canvas.addEventListener('wheel', onDocumentMouseWheel);
-    }
+        .split-right {
+            position: absolute;
+            right: 0;
+            width: 60%;
+            height: 100%;
+            background-image: url('https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?q=80&w=2000&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            mask-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 100 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><path d="M0,0 L100,0 L100,100 L20,100 Q15,50 0,0 Z" fill="black"/></svg>');
+            -webkit-mask-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 100 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><path d="M30,0 L100,0 L100,100 L10,100 Q15,40 30,0 Z" fill="black"/></svg>');
+            -webkit-mask-size: 100% 100%;
+            mask-size: 100% 100%;
+        }
 
-    // Dynamic Fallback Texture Generator
-    function createFallbackTexture(bgColor, label) {
-      const canvas = document.createElement('canvas');
-      canvas.width = 2048;
-      canvas.height = 1024;
-      const ctx = canvas.getContext('2d');
+        .texture-overlay {
+            position: absolute;
+            inset: 0;
+            background: url('https://www.transparenttextures.com/patterns/cream-paper.png');
+            opacity: 0.6;
+            mix-blend-mode: multiply;
+            pointer-events: none;
+        }
 
-      ctx.fillStyle = bgColor;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+        /* Header Navigation Styles */
+        .nav-link {
+            position: relative;
+            padding: 0.5rem 0;
+            font-size: 0.75rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            font-weight: 600;
+            color: #1C1917;
+            transition: color 0.3s;
+        }
 
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
-      ctx.lineWidth = 4;
-      for (let x = 0; x < canvas.width; x += 128) {
-        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
-      }
-      for (let y = 0; y < canvas.height; y += 128) {
-        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
-      }
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 6px;
+            height: 6px;
+            background-color: transparent;
+            border-radius: 50%;
+            transition: background-color 0.3s;
+        }
 
-      ctx.strokeStyle = '#00f2fe';
-      ctx.lineWidth = 8;
-      ctx.beginPath(); ctx.moveTo(0, canvas.height/2); ctx.lineTo(canvas.width, canvas.height/2); ctx.stroke();
+        .nav-link.active::after {
+            background-color: #7B2E24;
+        }
 
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 64px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText(label, canvas.width / 2, canvas.height / 2 - 20);
-      ctx.font = '32px sans-serif';
-      ctx.fillText('Upload corresponding image file to GitHub root folder to replace this', canvas.width / 2, canvas.height / 2 + 50);
+        /* Custom Header adjustments for 3D Viewer */
+        header {
+            transition: background 0.5s, color 0.5s;
+        }
+        body.viewer-mode header {
+            background: linear-gradient(to bottom, rgba(28, 25, 23, 0.9), transparent);
+        }
+        body.viewer-mode .nav-link, body.viewer-mode header .logo-text, body.viewer-mode header i {
+            color: #EFE7DB;
+        }
+        body.viewer-mode .nav-link.active::after {
+            background-color: #7B2E24;
+        }
 
-      return new THREE.CanvasTexture(canvas);
-    }
+        /* 3D Studio Specific Styles */
+        #webgl-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
 
-    function setupUIControls() {
-      // Scheme Switching Logic
-      const btn1 = document.getElementById('btn-scheme1');
-      const btn2 = document.getElementById('btn-scheme2');
+        /* Vintage Floating Panels for Viewer */
+        .vintage-panel {
+            position: absolute;
+            top: 100px;
+            background: rgba(248, 245, 240, 0.92);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(123, 46, 36, 0.2);
+            border-radius: 4px;
+            padding: 24px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            color: #1C1917;
+            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s;
+        }
 
-      btn1.addEventListener('click', () => {
-        renderMaterial.map = scheme1Texture;
-        renderMaterial.needsUpdate = true;
-        btn1.classList.add('active-scheme');
-        btn1.classList.remove('secondary');
-        btn2.classList.remove('active-scheme');
-        btn2.classList.add('secondary');
-      });
+        #vr-ui-container {
+            left: 32px;
+            width: 320px;
+            transform: translateX(-120%);
+        }
 
-      btn2.addEventListener('click', () => {
-        renderMaterial.map = scheme2Texture;
-        renderMaterial.needsUpdate = true;
-        btn2.classList.add('active-scheme');
-        btn2.classList.remove('secondary');
-        btn1.classList.remove('active-scheme');
-        btn1.classList.add('secondary');
-      });
+        #vr-desc-panel {
+            right: 32px;
+            width: 340px;
+            transform: translateX(120%);
+        }
 
-      // Opacity Slider
-      const opacitySlider = document.getElementById('opacity-slider');
-      const opacityVal = document.getElementById('opacity-val');
-      opacitySlider.addEventListener('input', (e) => {
-        const val = parseFloat(e.target.value);
-        renderMaterial.opacity = val;
-        opacityVal.textContent = Math.round(val * 100) + '%';
-      });
+        body.viewer-mode #vr-ui-container, 
+        body.viewer-mode #vr-desc-panel {
+            transform: translateX(0);
+        }
 
-      // Alignment Sliders
-      const yawSlider = document.getElementById('yaw-slider');
-      const yawVal = document.getElementById('yaw-val');
-      yawSlider.addEventListener('input', (e) => {
-        const val = parseFloat(e.target.value);
-        renderSphere.rotation.y = THREE.MathUtils.degToRad(val);
-        yawVal.textContent = val + '°';
-      });
+        .vr-btn-vintage {
+            background: transparent;
+            color: #7B2E24;
+            border: 1px solid #7B2E24;
+            padding: 8px 12px;
+            border-radius: 2px;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            width: 100%;
+        }
 
-      const pitchSlider = document.getElementById('pitch-slider');
-      const pitchVal = document.getElementById('pitch-val');
-      pitchSlider.addEventListener('input', (e) => {
-        const val = parseFloat(e.target.value);
-        renderSphere.rotation.x = THREE.MathUtils.degToRad(val);
-        pitchVal.textContent = val + '°';
-      });
+        .vr-btn-vintage:hover {
+            background: rgba(123, 46, 36, 0.1);
+        }
 
-      // Presets
-      document.getElementById('preset-site').addEventListener('click', () => {
-        opacitySlider.value = 0;
-        opacitySlider.dispatchEvent(new Event('input'));
-      });
+        .vr-btn-vintage.active-scheme {
+            background: #7B2E24 !important;
+            color: #EFE7DB !important;
+        }
 
-      document.getElementById('preset-render').addEventListener('click', () => {
-        opacitySlider.value = 1;
-        opacitySlider.dispatchEvent(new Event('input'));
-      });
-    }
+        /* Custom Vintage Slider */
+        input[type=range].vintage-slider {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        input[type=range].vintage-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 16px;
+            width: 16px;
+            border-radius: 50%;
+            background: #7B2E24;
+            cursor: pointer;
+            margin-top: -6px;
+        }
+        input[type=range].vintage-slider::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: rgba(123, 46, 36, 0.2);
+            border-radius: 2px;
+        }
+        
+        .map-pin {
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            background-color: #7B2E24;
+            color: #EFE7DB;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.65rem;
+            font-weight: 600;
+            transform: translate(-50%, -50%);
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            transition: transform 0.2s, background-color 0.2s;
+            border: 1.5px solid #EFE7DB;
+            z-index: 20;
+        }
+        .map-pin:hover {
+            transform: translate(-50%, -50%) scale(1.2);
+            background-color: #5C2119;
+        }
+        
+        .explore-list-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.4rem 0;
+            cursor: pointer;
+            transition: opacity 0.2s;
+            color: #1C1917;
+        }
+        .explore-list-item:hover {
+            opacity: 0.6;
+        }
+        .explore-list-item .num {
+            background-color: #7B2E24;
+            color: #EFE7DB;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.65rem;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+        
+        .explore-card {
+            background-color: #F8F5F0;
+            border-radius: 4px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 1px solid rgba(123, 46, 36, 0.1);
+            padding: 0.3rem;
+        }
+        .explore-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+        }
+        
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        
+        .vr-btn {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            color: #0f172a;
+            border: none;
+            padding: 10px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .vr-btn.secondary {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+        }
+        .vr-btn.active-scheme {
+            background: #fbbf24 !important;
+            color: black !important;
+        }
+    </style>
+</head>
+<body class="antialiased font-sans">
 
-    function setupWebXRButton() {
-      const vrButton = document.getElementById('vr-button');
-      if ('xr' in navigator) {
-        navigator.xr.isSessionSupported('immersive-vr').then((supported) => {
-          if (supported) {
-            vrButton.addEventListener('click', () => {
-              navigator.xr.requestSession('immersive-vr', {
-                optionalFeatures: ['local-floor', 'bounded-floor']
-              }).then((session) => {
-                renderer.xr.setSession(session);
-                vrButton.style.display = 'none';
-              });
+    <header class="fixed top-0 left-0 w-full z-[100] px-8 py-6 flex justify-between items-start pointer-events-none">
+        <!-- Logo Area -->
+        <div class="flex items-center gap-4 pointer-events-auto cursor-pointer" onclick="navigate('home')">
+            <div class="w-12 h-12 border border-brand-red flex items-center justify-center rounded-sm">
+                <!-- SVPM placeholder icon -->
+                <i class="ph ph-buildings text-2xl text-brand-red"></i>
+            </div>
+            <div class="logo-text">
+                <p class="text-[0.65rem] tracking-[0.2em] uppercase text-brand-muted mb-1">Sardar Vallabhbhai</p>
+                <h1 class="font-serif text-2xl font-bold text-brand-red tracking-wide leading-none">POORNA MARKET</h1>
+                <p class="text-[0.65rem] tracking-[0.15em] uppercase text-brand-muted mt-2">Vizag's People's Market</p>
+                <p class="text-[0.6rem] tracking-[0.25em] uppercase text-brand-muted">Then &middot; Now &middot; Tomorrow</p>
+            </div>
+        </div>
+
+        <!-- Main Navigation -->
+        <nav class="flex gap-10 mt-2 pointer-events-auto">
+            <button class="nav-link active" onclick="navigate('home')" data-target="home">HOME</button>
+            <button class="nav-link" onclick="navigate('explore')" data-target="explore">EXPLORE</button>
+            <button class="nav-link" onclick="navigate('gallery')" data-target="gallery">GALLERY</button>
+            <button class="nav-link" onclick="navigate('viewer')" data-target="viewer">VIEWER</button>
+            <button class="nav-link" onclick="navigate('zone-view')" data-target="zone-view">ZONE VIEW</button>
+        </nav>
+
+        <!-- Right Icons -->
+        <div class="flex gap-6 mt-2 pointer-events-auto logo-text">
+            <button><i class="ph ph-magnifying-glass text-xl"></i></button>
+            <button><i class="ph ph-list text-xl"></i></button>
+        </div>
+    </header>
+
+    <main id="app-container" class="relative w-full h-screen">
+
+        <!-- ==================== HOME SECTION ==================== -->
+        <section id="home" class="page-section active">
+            <!-- Background Layers -->
+            <div class="split-bg-container">
+                <div class="split-left"></div>
+                <div class="split-right"></div>
+                <div class="texture-overlay"></div>
+            </div>
+
+            <!-- Content Container -->
+            <div class="absolute inset-0 flex flex-col justify-center px-24 z-10">
+                <div class="max-w-md ml-12 mt-16">
+                    <h2 class="font-serif text-6xl text-brand-red font-bold leading-tight mb-4">
+                        A PEOPLE'S<br>MARKET
+                    </h2>
+                    <p class="text-sm tracking-[0.2em] font-semibold text-brand-dark mb-8">
+                        THEN &middot; NOW &middot; TOMORROW
+                    </p>
+                    
+                    <div class="h-[2px] w-16 bg-brand-red mb-8"></div>
+                    
+                    <p class="text-brand-dark text-sm leading-relaxed mb-8 pr-12">
+                        Explore the transformation of Poorna Market in 360° and experience its legacy, people and future as a vibrant public marketplace for Visakhapatnam.
+                    </p>
+
+                    <button onclick="navigate('viewer')" class="bg-brand-red text-white text-xs font-semibold tracking-widest uppercase px-8 py-4 rounded-sm flex items-center gap-4 hover:bg-[#5C2119] transition-colors shadow-lg">
+                        ENTER 360° EXPERIENCE <i class="ph ph-arrow-right text-lg"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="absolute bottom-8 left-8 right-8 flex justify-between items-end z-10 px-8">
+                <!-- Pagination -->
+                <div class="flex items-center gap-4 text-xs font-semibold text-brand-red">
+                    <span class="flex items-center gap-2">01 <div class="w-12 h-[1px] bg-brand-red"></div></span>
+                    <span class="text-brand-muted opacity-50">02</span>
+                    <span class="text-brand-muted opacity-50">03</span>
+                </div>
+
+                <!-- Features Array -->
+                <div class="flex gap-16 mr-24">
+                    <div class="flex flex-col items-center gap-2">
+                        <i class="ph ph-storefront text-2xl text-brand-red"></i>
+                        <span class="text-[0.6rem] uppercase tracking-widest text-center text-brand-dark">Vibrant<br>Public Realm</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-2">
+                        <i class="ph ph-leaf text-2xl text-brand-red"></i>
+                        <span class="text-[0.6rem] uppercase tracking-widest text-center text-brand-dark">People-Centric<br>Design</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-2">
+                        <i class="ph ph-bank text-2xl text-brand-red"></i>
+                        <span class="text-[0.6rem] uppercase tracking-widest text-center text-brand-dark">Retained<br>Landmarks</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-2">
+                        <i class="ph ph-graph text-2xl text-brand-red"></i>
+                        <span class="text-[0.6rem] uppercase tracking-widest text-center text-brand-dark">Better<br>Connectivity</span>
+                    </div>
+                </div>
+
+                <!-- Location -->
+                <div class="flex items-center gap-2 text-brand-dark text-xs font-semibold tracking-widest uppercase">
+                    <i class="ph-fill ph-map-pin text-brand-red"></i> Visakhapatnam
+                </div>
+            </div>
+            
+            <!-- Compass Icon Overlay -->
+            <div class="absolute top-24 right-12 z-10 opacity-70">
+                <i class="ph ph-compass text-4xl text-brand-dark"></i>
+            </div>
+        </section>
+
+        <!-- ==================== EXPLORE SECTION (Placeholder) ==================== -->
+        <section id="explore" class="page-section bg-[#EFE7DB]">
+            <div class="texture-overlay"></div>
+            
+            <div class="w-full h-full pt-32 pb-12 px-12 flex gap-8 z-10 relative">
+                
+                <!-- Left Panel: Text & List -->
+                <div class="w-[22%] flex flex-col pt-4">
+                    <div class="text-[0.6rem] tracking-[0.2em] uppercase text-brand-red mb-4 font-bold">
+                        HOME <span class="mx-2">></span> EXPLORE
+                    </div>
+                    <h2 class="font-serif text-[2.5rem] text-brand-red leading-tight mb-4 tracking-wide">
+                        EXPLORE<br>POORNA MARKET
+                    </h2>
+                    <p class="text-xs text-brand-dark leading-relaxed mb-6 pr-4">
+                        Select a location from the key plan and enter the 360° experience to explore the market then, now and proposed through immersive views.
+                    </p>
+                    
+                    <div class="flex flex-col gap-1 mt-2" id="explore-text-list">
+                        <!-- Populated dynamically via JS -->
+                    </div>
+                </div>
+
+                <!-- Center Panel: Key Plan Map -->
+                <div class="w-[53%] relative flex items-center justify-center p-2">
+                    <div class="relative inline-block max-w-full max-h-full">
+                        <img src="image_b51ee3.jpg" id="key-plan-img" alt="Poorna Market Key Plan" class="max-w-full max-h-full object-contain mix-blend-multiply" />
+                        
+                        <!-- Map Pins Container Overlay -->
+                        <div id="map-pins-container" class="absolute top-0 left-0 w-full h-full pointer-events-none">
+                            <!-- Populated dynamically via JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Panel: Image Cards -->
+                <div class="w-[25%] h-full flex flex-col relative pt-4">
+                    <div class="overflow-y-auto hide-scrollbar flex-1 flex flex-col gap-3 pb-24" id="explore-cards-list">
+                        <!-- Populated dynamically via JS -->
+                    </div>
+                    
+                    <!-- Bottom Gradient Overlay & Button -->
+                    <div class="absolute bottom-0 left-0 w-full bg-gradient-to-t from-[#EFE7DB] via-[#EFE7DB] to-transparent pt-16 pb-4">
+                        <button class="w-full bg-[#7B2E24] text-[#EFE7DB] text-[0.65rem] font-bold tracking-[0.2em] uppercase py-4 rounded-sm hover:bg-[#5C2119] transition-colors shadow-lg flex items-center justify-center gap-3">
+                            SELECT A LOCATION <i class="ph ph-arrow-right text-sm"></i>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ==================== GALLERY SECTION (Placeholder) ==================== -->
+        <section id="gallery" class="page-section bg-brand-vintage flex items-center justify-center">
+            <div class="texture-overlay"></div>
+            <h2 class="font-serif text-5xl text-brand-red z-10">Design Gallery</h2>
+        </section>
+
+        <!-- ==================== ZONE VIEW (Placeholder) ==================== -->
+        <section id="zone-view" class="page-section bg-brand-vintage flex items-center justify-center">
+            <div class="texture-overlay"></div>
+            <h2 class="font-serif text-5xl text-brand-red z-10">Masterplan Zones</h2>
+        </section>
+
+        <!-- ==================== VIEWER SECTION (Three.js WebXR) ==================== -->
+        <section id="viewer" class="page-section bg-[#1C1917]">
+            <canvas id="webgl-canvas"></canvas>
+
+            <!-- Left Panel: VR Spatial UI -->
+            <div id="vr-ui-container" class="vintage-panel">
+                <h3 class="font-serif text-2xl text-brand-red font-bold mb-1">360° Studio</h3>
+                <p class="text-[0.65rem] text-brand-muted uppercase tracking-[0.2em] mb-6 pb-4 border-b border-brand-red/20">Scheme Comparison</p>
+
+                <div class="mb-6">
+                    <label class="text-[0.65rem] uppercase tracking-widest text-brand-dark font-bold block mb-3">1. Select Scheme</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button id="btn-scheme1" class="vr-btn-vintage active-scheme">Scheme A</button>
+                        <button id="btn-scheme2" class="vr-btn-vintage">Scheme B</button>
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <label class="flex justify-between text-[0.65rem] uppercase tracking-widest text-brand-dark font-bold mb-3">
+                        2. AR Blend <span id="opacity-val" class="text-brand-red">50%</span>
+                    </label>
+                    <input type="range" id="opacity-slider" min="0" max="1" step="0.01" value="0.5" class="vintage-slider" />
+                    <div class="grid grid-cols-2 gap-3 mt-3">
+                        <button id="preset-site" class="vr-btn-vintage py-1 text-[0.6rem]">Site Only</button>
+                        <button id="preset-render" class="vr-btn-vintage py-1 text-[0.6rem]">Design Only</button>
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <label class="flex justify-between text-[0.65rem] uppercase tracking-widest text-brand-dark font-bold mb-3">
+                        Yaw <span id="yaw-val" class="text-brand-red">0°</span>
+                    </label>
+                    <input type="range" id="yaw-slider" min="-180" max="180" step="0.5" value="0" class="vintage-slider" />
+                </div>
+                
+                <div class="mt-4 pt-4 border-t border-brand-red/20 text-[0.65rem] text-brand-muted" id="file-warning">
+                    * Displaying fallback grid textures.
+                </div>
+            </div>
+
+            <!-- Right Panel: Floating Description Panel -->
+            <div id="vr-desc-panel" class="vintage-panel flex flex-col">
+                <div class="text-[0.6rem] tracking-[0.2em] uppercase text-brand-red mb-2 font-bold" id="desc-num">00</div>
+                <h4 id="desc-title" class="font-serif text-2xl text-brand-red leading-tight mb-4 tracking-wide">Select a Zone</h4>
+                
+                <div class="w-full h-32 bg-[#EFE7DB] rounded-sm mb-4 overflow-hidden relative">
+                    <img id="desc-img" src="https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?q=80&w=400&h=200&auto=format&fit=crop" class="w-full h-full object-cover mix-blend-multiply" alt="Zone Preview">
+                    <div class="absolute inset-0 bg-brand-vintage mix-blend-multiply opacity-20"></div>
+                </div>
+
+                <p id="desc-text" class="text-xs text-brand-dark leading-relaxed">
+                    Navigate via the Explore tab to view specific historical context, masterplan rationale, and architectural interventions applied to this specific area of Poorna Market.
+                </p>
+            </div>
+
+            <!-- Floating Quest Button -->
+            <button id="vr-button" class="absolute bottom-8 right-8 bg-brand-red text-brand-vintage font-bold px-6 py-3 rounded-sm shadow-[0_10px_20px_rgba(123,46,36,0.3)] text-xs tracking-[0.15em] uppercase hover:bg-[#5C2119] transition-colors z-[100]">
+                ENTER VR
+            </button>
+            
+            <div class="absolute bottom-8 left-8 text-brand-vintage bg-[#1C1917]/80 backdrop-blur px-4 py-2 rounded-sm border border-white/10 text-xs tracking-wide">
+                Drag to look &middot; Scroll to zoom
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        // ==========================================
+        // SPA NAVIGATION LOGIC
+        // ==========================================
+        
+        const exploreLocations = [
+            { id: 1, num: "01", title: "Main Entrance", top: "72%", left: "54%", img: "https://images.unsplash.com/photo-1533900298318-6b8da08a523e?q=80&w=400&h=150&auto=format&fit=crop", desc: "The grand gateway to Poorna Market, redesigned to welcome pedestrians with shaded canopies and clear wayfinding while respecting the heritage facade." },
+            { id: 2, num: "02", title: "Clock Tower", top: "41%", left: "52%", img: "https://images.unsplash.com/photo-1582555172866-f73bb12a2ab3?q=80&w=400&h=150&auto=format&fit=crop", desc: "The historical heart of the market. The surrounding plaza has been opened up to create a vibrant public gathering space and focal point for community events." },
+            { id: 3, num: "03", title: "Central Spine", top: "56%", left: "53%", img: "https://images.unsplash.com/photo-1519624233777-624219356b73?q=80&w=400&h=150&auto=format&fit=crop", desc: "A widened, pedestrian-friendly central corridor with integrated seating and greenery, connecting the main entrance directly to the Clock Tower." },
+            { id: 4, num: "04", title: "Vegetable Zone", top: "59%", left: "40%", img: "https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=400&h=150&auto=format&fit=crop", desc: "Upgraded vendor stalls with improved natural ventilation, sanitary drainage systems, and modular display racks to maintain freshness and hygiene." },
+            { id: 5, num: "05", title: "Fish & Meat Zone", top: "57%", left: "68%", img: "https://images.unsplash.com/photo-1534723452862-4c874018d66d?q=80&w=400&h=150&auto=format&fit=crop", desc: "A specialized, climate-controlled sub-market featuring dedicated waste management and continuous cold-chain support infrastructure." },
+            { id: 6, num: "06", title: "Flower & Pooja Zone", top: "37%", left: "36%", img: "https://images.unsplash.com/photo-1563241527-3004b7be0ffd?q=80&w=400&h=150&auto=format&fit=crop", desc: "A fragrant, colorful precinct situated near the temple axis, featuring tiered display stands and shaded walkways for early morning trading." },
+            { id: 7, num: "07", title: "Retail Stalls", top: "41%", left: "64%", img: "https://images.unsplash.com/photo-1555529733-0e67056058e1?q=80&w=400&h=150&auto=format&fit=crop", desc: "Organized permanent retail units for dry goods and textiles, featuring uniform signage guidelines to create a cohesive visual identity." },
+            { id: 8, num: "08", title: "Food Court", top: "27%", left: "68%", img: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?q=80&w=400&h=150&auto=format&fit=crop", desc: "A new culinary destination offering local street food in a safe, hygienic environment with ample communal seating under a protective canopy." },
+            { id: 9, num: "09", title: "Service Area", top: "20%", left: "49%", img: "https://images.unsplash.com/photo-1587293852726-694b630e2de3?q=80&w=400&h=150&auto=format&fit=crop", desc: "Consolidated backend logistics hub managing deliveries, waste sorting, and utilities without disrupting the pedestrian flow in the primary market zones." }
+        ];
+
+        function initExploreSection() {
+            const listContainer = document.getElementById('explore-text-list');
+            const pinsContainer = document.getElementById('map-pins-container');
+            const cardsContainer = document.getElementById('explore-cards-list');
+
+            if (!listContainer || !pinsContainer || !cardsContainer) return;
+
+            exploreLocations.forEach(loc => {
+                // 1. Text List Item
+                const listItem = document.createElement('div');
+                listItem.className = 'explore-list-item';
+                listItem.innerHTML = `<div class="num">${loc.num}</div><span class="text-[0.7rem] font-semibold">${loc.title}</span>`;
+                listItem.onclick = () => openLocationInViewer(loc);
+                listContainer.appendChild(listItem);
+
+                // 2. Map Pin
+                const pin = document.createElement('div');
+                pin.className = 'map-pin pointer-events-auto';
+                pin.style.top = loc.top;
+                pin.style.left = loc.left;
+                pin.innerText = loc.num;
+                pin.onclick = () => openLocationInViewer(loc);
+                pin.title = loc.title;
+                pinsContainer.appendChild(pin);
+
+                // 3. Image Card
+                const card = document.createElement('div');
+                card.className = 'explore-card group bg-white relative';
+                card.onclick = () => openLocationInViewer(loc);
+                card.innerHTML = `
+                    <div class="relative w-full h-20 rounded-[2px] overflow-hidden mb-2">
+                        <img src="${loc.img}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="${loc.title}">
+                    </div>
+                    <div class="flex items-center gap-3 px-2 pb-1">
+                        <div class="w-5 h-5 rounded-full bg-brand-red text-white flex items-center justify-center text-[0.55rem] font-bold shrink-0">${loc.num}</div>
+                        <span class="text-[0.65rem] font-semibold text-brand-dark">${loc.title}</span>
+                    </div>
+                `;
+                cardsContainer.appendChild(card);
             });
-          } else {
-            vrButton.textContent = 'VR NOT SUPPORTED ON THIS DEVICE';
-            vrButton.disabled = true;
-          }
-        });
-      } else {
-        vrButton.textContent = 'WEBXR REQUIRES HTTPS (GITHUB PAGES)';
-        vrButton.disabled = true;
-      }
-    }
+        }
 
-    // Viewport Controls
-    function onPointerDown(event) {
-      isUserInteracting = true;
-      onPointerDownPointerX = event.clientX;
-      onPointerDownPointerY = event.clientY;
-      onPointerDownLon = lon;
-      onPointerDownLat = lat;
-    }
+        function openLocationInViewer(loc) {
+            // Update the UI title in the Viewer Left Panel
+            const viewerTitle = document.querySelector('#vr-ui-container h3');
+            if(viewerTitle) {
+                viewerTitle.innerText = `${loc.num} - 360° Studio`;
+            }
 
-    function onPointerMove(event) {
-      if (isUserInteracting) {
-        lon = (onPointerDownPointerX - event.clientX) * 0.1 + onPointerDownLon;
-        lat = (event.clientY - onPointerDownPointerY) * 0.1 + onPointerDownLat;
-      }
-    }
+            // Update Right Panel Description Data
+            const descNum = document.getElementById('desc-num');
+            const descTitle = document.getElementById('desc-title');
+            const descImg = document.getElementById('desc-img');
+            const descText = document.getElementById('desc-text');
+            
+            if(descNum) descNum.innerText = `Location ${loc.num}`;
+            if(descTitle) descTitle.innerText = loc.title;
+            if(descImg) descImg.src = loc.img;
+            if(descText) descText.innerText = loc.desc;
 
-    function onPointerUp() { isUserInteracting = false; }
+            // Generate new fallback textures with the location's name to simulate loading different zones
+            if (siteSphere && siteSphere.material) {
+                siteSphere.material.map = createFallbackTexture('#1e293b', `${loc.title.toUpperCase()} (EXISTING)`);
+                siteSphere.material.needsUpdate = true;
+            }
+            if (renderMaterial) {
+                scheme1Texture = createFallbackTexture('#0f766e', `${loc.title.toUpperCase()} (SCHEME A)`);
+                scheme2Texture = createFallbackTexture('#4338ca', `${loc.title.toUpperCase()} (SCHEME B)`);
+                
+                // Reset to Scheme A active
+                renderMaterial.map = scheme1Texture;
+                renderMaterial.needsUpdate = true;
+                
+                const btn1 = document.getElementById('btn-scheme1');
+                const btn2 = document.getElementById('btn-scheme2');
+                if(btn1 && btn2) {
+                    btn1.classList.add('active-scheme');
+                    btn2.classList.remove('active-scheme');
+                }
+            }
 
-    function onDocumentMouseWheel(event) {
-      const fov = camera.fov + event.deltaY * 0.05;
-      camera.fov = THREE.MathUtils.clamp(fov, 30, 90);
-      camera.updateProjectionMatrix();
-    }
+            // Navigate to viewer tab
+            navigate('viewer');
+        }
 
-    function onWindowResize() {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-    }
+        // Initialize immediately
+        initExploreSection();
 
-    // Render Loop
-    function animate() {
-      renderer.setAnimationLoop(render);
-    }
+        function navigate(targetId) {
+            // Update Navigation UI
+            document.querySelectorAll('.nav-link').forEach(link => {
+                if(link.getAttribute('data-target') === targetId) {
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+            });
 
-    function render() {
-      if (!renderer.xr.isPresenting) {
-        lat = Math.max(-85, Math.min(85, lat));
-        phi = THREE.MathUtils.degToRad(90 - lat);
-        theta = THREE.MathUtils.degToRad(lon);
+            // Transition Sections
+            document.querySelectorAll('.page-section').forEach(section => {
+                if(section.id === targetId) {
+                    section.classList.add('active');
+                } else {
+                    section.classList.remove('active');
+                }
+            });
 
-        camera.target.x = 500 * Math.sin(phi) * Math.cos(theta);
-        camera.target.y = 500 * Math.cos(phi);
-        camera.target.z = 500 * Math.sin(phi) * Math.sin(theta);
+            // Special handling for Viewer
+            if(targetId === 'viewer') {
+                document.body.classList.add('viewer-mode');
+                // Force Three.js to recalibrate its size since it was hidden
+                if (typeof onWindowResize === 'function') {
+                    setTimeout(onWindowResize, 100); 
+                }
+            } else {
+                document.body.classList.remove('viewer-mode');
+            }
+        }
 
-        camera.lookAt(camera.target);
-      }
 
-      renderer.render(scene, camera);
-    }
-  </script>
+        // ==========================================
+        // THREE.JS VR STUDIO LOGIC
+        // ==========================================
+        const SITE_IMAGE_PATH = 'site.jpg';
+        const SCHEME_1_PATH   = 'option1.jpg';
+        const SCHEME_2_PATH   = 'option2.jpg';
+
+        let scene, camera, renderer;
+        let siteSphere, renderSphere;
+        let renderMaterial;
+        let scheme1Texture, scheme2Texture;
+        
+        let isUserInteracting = false;
+        let onPointerDownPointerX = 0, onPointerDownPointerY = 0;
+        let lon = 0, onPointerDownLon = 0, lat = 0, onPointerDownLat = 0;
+        let phi = 0, theta = 0;
+
+        init3D();
+        animate3D();
+
+        function init3D() {
+            const canvas = document.getElementById('webgl-canvas');
+
+            scene = new THREE.Scene();
+
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.target = new THREE.Vector3(0, 0, 0);
+
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.xr.enabled = true;
+
+            const geometry = new THREE.SphereGeometry(500, 60, 40);
+            geometry.scale(-1, 1, 1);
+
+            const textureLoader = new THREE.TextureLoader();
+
+            // Load Base Site
+            const siteTexture = textureLoader.load(SITE_IMAGE_PATH, undefined, undefined, () => {
+                siteSphere.material.map = createFallbackTexture('#1e293b', 'SITE PHOTO (site.jpg)');
+                siteSphere.material.needsUpdate = true;
+                document.getElementById('file-warning').style.display = 'block';
+            });
+            const siteMaterial = new THREE.MeshBasicMaterial({ map: siteTexture });
+            siteSphere = new THREE.Mesh(geometry, siteMaterial);
+            scene.add(siteSphere);
+
+            // Preload Schemes
+            scheme1Texture = textureLoader.load(SCHEME_1_PATH, undefined, undefined, () => {
+                scheme1Texture = createFallbackTexture('#0f766e', 'SCHEME A (option1.jpg)');
+                if (renderMaterial) { renderMaterial.map = scheme1Texture; renderMaterial.needsUpdate = true; }
+            });
+
+            scheme2Texture = textureLoader.load(SCHEME_2_PATH, undefined, undefined, () => {
+                scheme2Texture = createFallbackTexture('#4338ca', 'SCHEME B (option2.jpg)');
+            });
+
+            // Overlay Sphere
+            renderMaterial = new THREE.MeshBasicMaterial({ map: scheme1Texture, transparent: true, opacity: 0.5 });
+            renderSphere = new THREE.Mesh(geometry, renderMaterial);
+            scene.add(renderSphere);
+
+            setupUIControls();
+            setupWebXRButton();
+
+            window.addEventListener('resize', onWindowResize);
+            canvas.addEventListener('pointerdown', onPointerDown);
+            canvas.addEventListener('pointermove', onPointerMove);
+            canvas.addEventListener('pointerup', onPointerUp);
+            canvas.addEventListener('wheel', onDocumentMouseWheel);
+        }
+
+        // Fallback Texture Generator
+        function createFallbackTexture(bgColor, label) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 2048; canvas.height = 1024;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = bgColor; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)'; ctx.lineWidth = 4;
+            for (let x = 0; x < canvas.width; x += 128) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke(); }
+            for (let y = 0; y < canvas.height; y += 128) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke(); }
+            ctx.strokeStyle = '#00f2fe'; ctx.lineWidth = 8;
+            ctx.beginPath(); ctx.moveTo(0, canvas.height/2); ctx.lineTo(canvas.width, canvas.height/2); ctx.stroke();
+            ctx.fillStyle = '#ffffff'; ctx.font = 'bold 72px sans-serif'; ctx.textAlign = 'center';
+            ctx.fillText(label, canvas.width / 2, canvas.height / 2 - 20);
+            return new THREE.CanvasTexture(canvas);
+        }
+
+        function setupUIControls() {
+            const btn1 = document.getElementById('btn-scheme1');
+            const btn2 = document.getElementById('btn-scheme2');
+
+            btn1.addEventListener('click', () => {
+                renderMaterial.map = scheme1Texture; renderMaterial.needsUpdate = true;
+                btn1.classList.add('active-scheme'); 
+                btn2.classList.remove('active-scheme');
+            });
+
+            btn2.addEventListener('click', () => {
+                renderMaterial.map = scheme2Texture; renderMaterial.needsUpdate = true;
+                btn2.classList.add('active-scheme'); 
+                btn1.classList.remove('active-scheme');
+            });
+
+            const opacitySlider = document.getElementById('opacity-slider');
+            const opacityVal = document.getElementById('opacity-val');
+            opacitySlider.addEventListener('input', (e) => {
+                const val = parseFloat(e.target.value);
+                renderMaterial.opacity = val;
+                opacityVal.textContent = Math.round(val * 100) + '%';
+            });
+
+            const yawSlider = document.getElementById('yaw-slider');
+            const yawVal = document.getElementById('yaw-val');
+            yawSlider.addEventListener('input', (e) => {
+                const val = parseFloat(e.target.value);
+                renderSphere.rotation.y = THREE.MathUtils.degToRad(val);
+                yawVal.textContent = val + '°';
+            });
+
+            document.getElementById('preset-site').addEventListener('click', () => {
+                opacitySlider.value = 0; opacitySlider.dispatchEvent(new Event('input'));
+            });
+            document.getElementById('preset-render').addEventListener('click', () => {
+                opacitySlider.value = 1; opacitySlider.dispatchEvent(new Event('input'));
+            });
+        }
+
+        function setupWebXRButton() {
+            const vrButton = document.getElementById('vr-button');
+            if ('xr' in navigator) {
+                navigator.xr.isSessionSupported('immersive-vr').then((supported) => {
+                    if (supported) {
+                        vrButton.addEventListener('click', () => {
+                            navigator.xr.requestSession('immersive-vr', { optionalFeatures: ['local-floor'] })
+                            .then((session) => { renderer.xr.setSession(session); vrButton.style.display = 'none'; });
+                        });
+                    } else { vrButton.textContent = 'VR NOT SUPPORTED'; vrButton.disabled = true; }
+                });
+            } else { vrButton.textContent = 'WEBXR REQUIRES HTTPS'; vrButton.disabled = true; }
+        }
+
+        function onPointerDown(event) {
+            // Only interact if we are on the viewer tab
+            if(!document.getElementById('viewer').classList.contains('active')) return;
+            isUserInteracting = true;
+            onPointerDownPointerX = event.clientX; onPointerDownPointerY = event.clientY;
+            onPointerDownLon = lon; onPointerDownLat = lat;
+        }
+
+        function onPointerMove(event) {
+            if (isUserInteracting) {
+                lon = (onPointerDownPointerX - event.clientX) * 0.1 + onPointerDownLon;
+                lat = (event.clientY - onPointerDownPointerY) * 0.1 + onPointerDownLat;
+            }
+        }
+
+        function onPointerUp() { isUserInteracting = false; }
+
+        function onDocumentMouseWheel(event) {
+            if(!document.getElementById('viewer').classList.contains('active')) return;
+            const fov = camera.fov + event.deltaY * 0.05;
+            camera.fov = THREE.MathUtils.clamp(fov, 30, 90);
+            camera.updateProjectionMatrix();
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function animate3D() {
+            renderer.setAnimationLoop(render);
+        }
+
+        function render() {
+            // Only update camera if viewer is active, saves performance
+            if(document.getElementById('viewer').classList.contains('active')) {
+                if (!renderer.xr.isPresenting) {
+                    lat = Math.max(-85, Math.min(85, lat));
+                    phi = THREE.MathUtils.degToRad(90 - lat);
+                    theta = THREE.MathUtils.degToRad(lon);
+
+                    camera.target.x = 500 * Math.sin(phi) * Math.cos(theta);
+                    camera.target.y = 500 * Math.cos(phi);
+                    camera.target.z = 500 * Math.sin(phi) * Math.sin(theta);
+
+                    camera.lookAt(camera.target);
+                }
+                renderer.render(scene, camera);
+            }
+        }
+    </script>
 </body>
 </html>
