@@ -162,12 +162,12 @@
         /* Vintage Floating Panels for Viewer */
         .vintage-panel {
             position: absolute;
-            top: 100px;
+            top: 140px;
             background: rgba(248, 245, 240, 0.92);
             backdrop-filter: blur(12px);
             border: 1px solid rgba(123, 46, 36, 0.2);
             border-radius: 4px;
-            padding: 24px;
+            padding: 20px;
             box-shadow: 0 20px 40px rgba(0,0,0,0.15);
             color: #1C1917;
             transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s;
@@ -175,19 +175,27 @@
 
         #vr-ui-container {
             left: 32px;
-            width: 320px;
+            width: 250px;
             transform: translateX(-120%);
         }
 
         #vr-desc-panel {
             right: 32px;
-            width: 340px;
+            width: 250px;
             transform: translateX(120%);
+            max-height: calc(100vh - 460px);
+            overflow-y: auto;
+        }
+
+        #mini-map-widget {
+            transform: translateY(150%);
+            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         body.viewer-mode #vr-ui-container, 
-        body.viewer-mode #vr-desc-panel {
-            transform: translateX(0);
+        body.viewer-mode #vr-desc-panel,
+        body.viewer-mode #mini-map-widget {
+            transform: translate(0);
         }
 
         .vr-btn-vintage {
@@ -253,13 +261,20 @@
             transform: translate(-50%, -50%);
             cursor: pointer;
             box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-            transition: transform 0.2s, background-color 0.2s;
+            transition: transform 0.2s, background-color 0.2s, box-shadow 0.2s;
             border: 1.5px solid #EFE7DB;
             z-index: 20;
+            pointer-events: auto;
         }
         .map-pin:hover {
             transform: translate(-50%, -50%) scale(1.2);
             background-color: #5C2119;
+        }
+        .map-pin.active-pin {
+            background-color: #5C2119;
+            transform: translate(-50%, -50%) scale(1.3);
+            box-shadow: 0 0 0 2px #EFE7DB, 0 0 0 4px #7B2E24;
+            z-index: 30;
         }
         
         .explore-list-item {
@@ -309,25 +324,6 @@
             -ms-overflow-style: none;
             scrollbar-width: none;
         }
-        
-        .vr-btn {
-            background: linear-gradient(135deg, #4facfe, #00f2fe);
-            color: #0f172a;
-            border: none;
-            padding: 10px;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-        }
-        .vr-btn.secondary {
-            background: transparent;
-            border: 1px solid rgba(255,255,255,0.2);
-            color: white;
-        }
-        .vr-btn.active-scheme {
-            background: #fbbf24 !important;
-            color: black !important;
-        }
     </style>
 </head>
 <body class="antialiased font-sans">
@@ -336,7 +332,6 @@
         <!-- Logo Area -->
         <div class="flex items-center gap-4 pointer-events-auto cursor-pointer" onclick="navigate('home')">
             <div class="w-12 h-12 border border-brand-red flex items-center justify-center rounded-sm">
-                <!-- SVPM placeholder icon -->
                 <i class="ph ph-buildings text-2xl text-brand-red"></i>
             </div>
             <div class="logo-text">
@@ -436,7 +431,7 @@
             </div>
         </section>
 
-        <!-- ==================== EXPLORE SECTION (Placeholder) ==================== -->
+        <!-- ==================== EXPLORE SECTION ==================== -->
         <section id="explore" class="page-section bg-[#EFE7DB]">
             <div class="texture-overlay"></div>
             
@@ -488,13 +483,13 @@
             </div>
         </section>
 
-        <!-- ==================== GALLERY SECTION (Placeholder) ==================== -->
+        <!-- ==================== GALLERY SECTION ==================== -->
         <section id="gallery" class="page-section bg-brand-vintage flex items-center justify-center">
             <div class="texture-overlay"></div>
             <h2 class="font-serif text-5xl text-brand-red z-10">Design Gallery</h2>
         </section>
 
-        <!-- ==================== ZONE VIEW (Placeholder) ==================== -->
+        <!-- ==================== ZONE VIEW ==================== -->
         <section id="zone-view" class="page-section bg-brand-vintage flex items-center justify-center">
             <div class="texture-overlay"></div>
             <h2 class="font-serif text-5xl text-brand-red z-10">Masterplan Zones</h2>
@@ -541,21 +536,34 @@
             </div>
 
             <!-- Right Panel: Floating Description Panel -->
-            <div id="vr-desc-panel" class="vintage-panel flex flex-col">
+            <div id="vr-desc-panel" class="vintage-panel flex flex-col hide-scrollbar">
                 <div class="text-[0.6rem] tracking-[0.2em] uppercase text-brand-red mb-2 font-bold" id="desc-num">00</div>
-                <h4 id="desc-title" class="font-serif text-2xl text-brand-red leading-tight mb-4 tracking-wide">Select a Zone</h4>
+                <h4 id="desc-title" class="font-serif text-lg text-brand-red leading-tight mb-3 tracking-wide">Select a Zone</h4>
                 
-                <div class="w-full h-32 bg-[#EFE7DB] rounded-sm mb-4 overflow-hidden relative">
+                <div class="w-full h-24 bg-[#EFE7DB] rounded-sm mb-3 overflow-hidden relative shrink-0">
                     <img id="desc-img" src="https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?q=80&w=400&h=200&auto=format&fit=crop" class="w-full h-full object-cover mix-blend-multiply" alt="Zone Preview">
                     <div class="absolute inset-0 bg-brand-vintage mix-blend-multiply opacity-20"></div>
                 </div>
 
-                <p id="desc-text" class="text-xs text-brand-dark leading-relaxed">
+                <p id="desc-text" class="text-[0.6rem] text-brand-dark leading-relaxed">
                     Navigate via the Explore tab to view specific historical context, masterplan rationale, and architectural interventions applied to this specific area of Poorna Market.
                 </p>
             </div>
 
-            <!-- Floating Quest Button -->
+            <!-- Viewer Mini-Map Widget (Keyplan Navigation in 3D Mode) -->
+            <div id="mini-map-widget" class="absolute bottom-[5.5rem] right-8 w-[200px] bg-[rgba(248,245,240,0.92)] backdrop-blur-md border border-[rgba(123,46,36,0.2)] rounded-sm shadow-2xl p-2 z-[100]">
+                <div class="flex justify-between items-center mb-1.5">
+                    <div class="text-[0.55rem] font-bold text-brand-red uppercase tracking-widest">Jump to Location</div>
+                    <i class="ph ph-map-trifold text-brand-red text-sm"></i>
+                </div>
+                <div class="relative w-full aspect-[4/3] bg-white rounded-sm border border-black/5 overflow-hidden">
+                    <img src="image_b51ee3.jpg" class="w-full h-full object-contain mix-blend-multiply" alt="Mini Key Plan" />
+                    <!-- Mini Map Pins Container -->
+                    <div id="mini-map-pins" class="absolute inset-0 pointer-events-none"></div>
+                </div>
+            </div>
+
+            <!-- Floating Quest / VR Button -->
             <button id="vr-button" class="absolute bottom-8 right-8 bg-brand-red text-brand-vintage font-bold px-6 py-3 rounded-sm shadow-[0_10px_20px_rgba(123,46,36,0.3)] text-xs tracking-[0.15em] uppercase hover:bg-[#5C2119] transition-colors z-[100]">
                 ENTER VR
             </button>
@@ -569,7 +577,7 @@
 
     <script>
         // ==========================================
-        // SPA NAVIGATION LOGIC
+        // SPA NAVIGATION & DATA LOGIC
         // ==========================================
         
         const exploreLocations = [
@@ -586,10 +594,9 @@
 
         function initExploreSection() {
             const listContainer = document.getElementById('explore-text-list');
-            const pinsContainer = document.getElementById('map-pins-container');
             const cardsContainer = document.getElementById('explore-cards-list');
 
-            if (!listContainer || !pinsContainer || !cardsContainer) return;
+            if (!listContainer || !cardsContainer) return;
 
             exploreLocations.forEach(loc => {
                 // 1. Text List Item
@@ -599,17 +606,7 @@
                 listItem.onclick = () => openLocationInViewer(loc);
                 listContainer.appendChild(listItem);
 
-                // 2. Map Pin
-                const pin = document.createElement('div');
-                pin.className = 'map-pin pointer-events-auto';
-                pin.style.top = loc.top;
-                pin.style.left = loc.left;
-                pin.innerText = loc.num;
-                pin.onclick = () => openLocationInViewer(loc);
-                pin.title = loc.title;
-                pinsContainer.appendChild(pin);
-
-                // 3. Image Card
+                // 2. Image Card
                 const card = document.createElement('div');
                 card.className = 'explore-card group bg-white relative';
                 card.onclick = () => openLocationInViewer(loc);
@@ -624,9 +621,43 @@
                 `;
                 cardsContainer.appendChild(card);
             });
+
+            // Populate Map Pins for both main explore map and viewer mini-map
+            createMapPins('map-pins-container');
+            createMapPins('mini-map-pins');
+        }
+
+        // Helper to generate map pins for specific container
+        function createMapPins(containerId) {
+            const container = document.getElementById(containerId);
+            if(!container) return;
+            
+            container.innerHTML = ''; // clear first
+            exploreLocations.forEach(loc => {
+                const pin = document.createElement('div');
+                pin.className = `map-pin map-pin-${loc.id}`; // add specific class for tracking active state
+                pin.style.top = loc.top;
+                pin.style.left = loc.left;
+                pin.innerText = loc.num;
+                pin.onclick = () => openLocationInViewer(loc);
+                pin.title = loc.title;
+                container.appendChild(pin);
+            });
+        }
+
+        function updateActivePins(activeId) {
+            document.querySelectorAll('.map-pin').forEach(pin => {
+                pin.classList.remove('active-pin');
+            });
+            document.querySelectorAll(`.map-pin-${activeId}`).forEach(pin => {
+                pin.classList.add('active-pin');
+            });
         }
 
         function openLocationInViewer(loc) {
+            // Update Active Pin Visualization across all maps
+            updateActivePins(loc.id);
+
             // Update the UI title in the Viewer Left Panel
             const viewerTitle = document.querySelector('#vr-ui-container h3');
             if(viewerTitle) {
@@ -735,6 +766,7 @@
             renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
             renderer.setPixelRatio(window.devicePixelRatio);
             renderer.setSize(window.innerWidth, window.innerHeight);
+            // Crucial: Enabling WebXR
             renderer.xr.enabled = true;
 
             const geometry = new THREE.SphereGeometry(500, 60, 40);
@@ -838,13 +870,31 @@
             if ('xr' in navigator) {
                 navigator.xr.isSessionSupported('immersive-vr').then((supported) => {
                     if (supported) {
+                        vrButton.textContent = 'ENTER VR';
+                        vrButton.disabled = false;
                         vrButton.addEventListener('click', () => {
                             navigator.xr.requestSession('immersive-vr', { optionalFeatures: ['local-floor'] })
-                            .then((session) => { renderer.xr.setSession(session); vrButton.style.display = 'none'; });
+                            .then((session) => { 
+                                renderer.xr.setSession(session); 
+                                vrButton.style.display = 'none'; 
+                                
+                                // Show button again when exiting VR
+                                session.addEventListener('end', () => {
+                                    vrButton.style.display = 'block';
+                                });
+                            });
                         });
-                    } else { vrButton.textContent = 'VR NOT SUPPORTED'; vrButton.disabled = true; }
+                    } else { 
+                        vrButton.textContent = 'VR HEADSET NOT FOUND'; 
+                        vrButton.disabled = true; 
+                        vrButton.title = 'Please connect a VR headset (like a Meta Quest) to use this feature.';
+                    }
                 });
-            } else { vrButton.textContent = 'WEBXR REQUIRES HTTPS'; vrButton.disabled = true; }
+            } else { 
+                vrButton.textContent = 'HTTPS REQUIRED FOR VR'; 
+                vrButton.disabled = true; 
+                vrButton.title = 'WebXR requires a secure HTTPS connection or localhost environment.';
+            }
         }
 
         function onPointerDown(event) {
