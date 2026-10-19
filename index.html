@@ -13,7 +13,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
     
-    <!-- Phosphor Icons for elegant UI iconography -->
+    <!-- Phosphor Icons -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
 
     <!-- Three.js & WebXR -->
@@ -41,128 +41,39 @@
     </script>
 
     <style>
-        body {
-            background-color: #EFE7DB;
-            overflow: hidden;
-        }
+        body { background-color: #EFE7DB; overflow: hidden; }
 
-        /* SPA Section Morphing */
         .page-section {
-            position: absolute;
-            inset: 0;
-            opacity: 0;
-            pointer-events: none;
+            position: absolute; inset: 0; opacity: 0; pointer-events: none;
             transition: all 0.8s cubic-bezier(0.64, 0, 0.78, 0);
-            transform: scale(1.02);
-            visibility: hidden;
-            z-index: 0;
+            transform: scale(1.02); visibility: hidden; z-index: 0;
         }
-
         .page-section.active {
-            opacity: 1;
-            pointer-events: auto;
-            transform: scale(1);
-            visibility: visible;
-            z-index: 10;
+            opacity: 1; pointer-events: auto; transform: scale(1);
+            visibility: visible; z-index: 10;
         }
 
-        /* Split Background Effect for Home */
-        .split-bg-container {
-            position: absolute;
-            inset: 0;
-            z-index: -1;
-            display: flex;
-            background: #EFE7DB;
-        }
-        
-        .split-left {
-            width: 55%;
-            height: 100%;
-            background-image: url('https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?q=80&w=2000&auto=format&fit=crop');
-            background-size: cover;
-            background-position: center;
-            filter: sepia(0.8) grayscale(0.5) contrast(1.2) brightness(0.9);
-            mask-image: linear-gradient(to right, rgba(0,0,0,1) 70%, rgba(0,0,0,0) 100%);
-            -webkit-mask-image: linear-gradient(to right, rgba(0,0,0,1) 80%, rgba(0,0,0,0) 100%);
-        }
+        .split-bg-container { position: absolute; inset: 0; z-index: -1; display: flex; background: #EFE7DB; }
+        .split-left { width: 55%; height: 100%; background-image: url('https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?q=80&w=2000&auto=format&fit=crop'); background-size: cover; background-position: center; filter: sepia(0.8) grayscale(0.5) contrast(1.2) brightness(0.9); mask-image: linear-gradient(to right, rgba(0,0,0,1) 70%, rgba(0,0,0,0) 100%); -webkit-mask-image: linear-gradient(to right, rgba(0,0,0,1) 80%, rgba(0,0,0,0) 100%); }
+        .split-right { position: absolute; right: 0; width: 60%; height: 100%; background-image: url('https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?q=80&w=2000&auto=format&fit=crop'); background-size: cover; background-position: center; mask-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 100 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><path d="M0,0 L100,0 L100,100 L20,100 Q15,50 0,0 Z" fill="black"/></svg>'); -webkit-mask-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 100 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><path d="M30,0 L100,0 L100,100 L10,100 Q15,40 30,0 Z" fill="black"/></svg>'); -webkit-mask-size: 100% 100%; mask-size: 100% 100%; }
 
-        .split-right {
-            position: absolute;
-            right: 0;
-            width: 60%;
-            height: 100%;
-            background-image: url('https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?q=80&w=2000&auto=format&fit=crop');
-            background-size: cover;
-            background-position: center;
-            mask-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 100 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><path d="M0,0 L100,0 L100,100 L20,100 Q15,50 0,0 Z" fill="black"/></svg>');
-            -webkit-mask-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 100 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><path d="M30,0 L100,0 L100,100 L10,100 Q15,40 30,0 Z" fill="black"/></svg>');
-            -webkit-mask-size: 100% 100%;
-            mask-size: 100% 100%;
-        }
+        .texture-overlay { position: absolute; inset: 0; background: url('https://www.transparenttextures.com/patterns/cream-paper.png'); opacity: 0.6; mix-blend-mode: multiply; pointer-events: none; }
 
-        .texture-overlay {
-            position: absolute;
-            inset: 0;
-            background: url('https://www.transparenttextures.com/patterns/cream-paper.png');
-            opacity: 0.6;
-            mix-blend-mode: multiply;
-            pointer-events: none;
-        }
+        .nav-link { position: relative; padding: 0.5rem 0; font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; color: #1C1917; transition: color 0.3s; }
+        .nav-link::after { content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 6px; height: 6px; background-color: transparent; border-radius: 50%; transition: background-color 0.3s; }
+        .nav-link.active::after { background-color: #7B2E24; }
 
-        /* Header Navigation Styles */
-        .nav-link {
-            position: relative;
-            padding: 0.5rem 0;
-            font-size: 0.75rem;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-            font-weight: 600;
-            color: #1C1917;
-            transition: color 0.3s;
-        }
+        header { transition: background 0.5s, color 0.5s; }
+        body.viewer-mode header { background: linear-gradient(to bottom, rgba(28, 25, 23, 0.9), transparent); }
+        body.viewer-mode .nav-link, body.viewer-mode header .logo-text, body.viewer-mode header i { color: #EFE7DB; }
+        body.viewer-mode .nav-link.active::after { background-color: #7B2E24; }
 
-        .nav-link::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 6px;
-            height: 6px;
-            background-color: transparent;
-            border-radius: 50%;
-            transition: background-color 0.3s;
-        }
+        #webgl-canvas { width: 100%; height: 100%; display: block; }
 
-        .nav-link.active::after {
-            background-color: #7B2E24;
-        }
-
-        /* Custom Header adjustments for 3D Viewer */
-        header {
-            transition: background 0.5s, color 0.5s;
-        }
-        body.viewer-mode header {
-            background: linear-gradient(to bottom, rgba(28, 25, 23, 0.9), transparent);
-        }
-        body.viewer-mode .nav-link, body.viewer-mode header .logo-text, body.viewer-mode header i {
-            color: #EFE7DB;
-        }
-        body.viewer-mode .nav-link.active::after {
-            background-color: #7B2E24;
-        }
-
-        /* 3D Studio Specific Styles */
-        #webgl-canvas {
-            width: 100%;
-            height: 100%;
-            display: block;
-        }
-
-        /* Vintage Floating Panels for Viewer */
+        /* Vintage Floating Panels */
         .vintage-panel {
             position: absolute;
-            top: 130px; /* Lowered from 100px */
+            top: 130px; 
             background: rgba(248, 245, 240, 0.92);
             backdrop-filter: blur(12px);
             border: 1px solid rgba(123, 46, 36, 0.2);
@@ -173,163 +84,38 @@
             transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s;
         }
 
-        #vr-ui-container {
-            left: 32px;
-            width: 250px;
-            transform: translateX(-120%);
-        }
-
-        #vr-desc-panel {
-            right: 32px;
-            width: 280px; /* Reduced width to prevent overlap */
-            transform: translateX(120%);
-            max-height: calc(100vh - 420px); /* Restrict height so it doesn't hit minimap */
-            overflow-y: auto;
-        }
-
-        #mini-map-widget {
-            transform: translateY(150%);
-            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-            width: 240px; /* Reduced map size */
-        }
-
-        body.viewer-mode #vr-ui-container, 
-        body.viewer-mode #vr-desc-panel,
-        body.viewer-mode #mini-map-widget {
-            transform: translate(0);
-        }
-
-        .vr-btn-vintage {
-            background: transparent;
-            color: #7B2E24;
-            border: 1px solid #7B2E24;
-            padding: 8px 12px;
-            border-radius: 2px;
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-align: center;
-            width: 100%;
-        }
-
-        .vr-btn-vintage:hover {
-            background: rgba(123, 46, 36, 0.1);
-        }
-
-        .vr-btn-vintage.active-scheme {
-            background: #7B2E24 !important;
-            color: #EFE7DB !important;
-        }
-
-        input[type=range].vintage-slider {
-            -webkit-appearance: none;
-            width: 100%;
-            background: transparent;
-        }
-        input[type=range].vintage-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            height: 16px;
-            width: 16px;
-            border-radius: 50%;
-            background: #7B2E24;
-            cursor: pointer;
-            margin-top: -6px;
-        }
-        input[type=range].vintage-slider::-webkit-slider-runnable-track {
-            width: 100%;
-            height: 4px;
-            cursor: pointer;
-            background: rgba(123, 46, 36, 0.2);
-            border-radius: 2px;
-        }
+        #vr-ui-container { left: 32px; width: 250px; transform: translateX(-120%); }
+        #vr-desc-panel { right: 32px; width: 280px; transform: translateX(120%); }
         
-        .map-pin {
-            position: absolute;
-            width: 24px;
-            height: 24px;
-            background-color: #7B2E24;
-            color: #EFE7DB;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.65rem;
-            font-weight: 600;
-            transform: translate(-50%, -50%);
-            cursor: pointer;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-            transition: transform 0.2s, background-color 0.2s, box-shadow 0.2s;
-            border: 1.5px solid #EFE7DB;
-            z-index: 20;
-            pointer-events: auto;
-        }
-        .map-pin:hover {
-            transform: translate(-50%, -50%) scale(1.2);
-            background-color: #5C2119;
-        }
-        .map-pin.active-pin {
-            background-color: #5C2119;
-            transform: translate(-50%, -50%) scale(1.3);
-            box-shadow: 0 0 0 2px #EFE7DB, 0 0 0 4px #7B2E24;
-            z-index: 30;
-        }
+        #mini-map-widget { transform: translateY(150%); transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1); width: 240px; }
+
+        body.viewer-mode #vr-ui-container, body.viewer-mode #vr-desc-panel, body.viewer-mode #mini-map-widget { transform: translate(0); }
+
+        .vr-btn-vintage { background: transparent; color: #7B2E24; border: 1px solid #7B2E24; padding: 8px 12px; border-radius: 2px; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600; cursor: pointer; transition: all 0.2s; text-align: center; width: 100%; }
+        .vr-btn-vintage:hover { background: rgba(123, 46, 36, 0.1); }
+        .vr-btn-vintage.active-scheme { background: #7B2E24 !important; color: #EFE7DB !important; }
+
+        input[type=range].vintage-slider { -webkit-appearance: none; width: 100%; background: transparent; }
+        input[type=range].vintage-slider::-webkit-slider-thumb { -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: #7B2E24; cursor: pointer; margin-top: -6px; }
+        input[type=range].vintage-slider::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: rgba(123, 46, 36, 0.2); border-radius: 2px; }
         
-        .explore-list-item {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            padding: 0.4rem 0;
-            cursor: pointer;
-            transition: opacity 0.2s;
-            color: #1C1917;
-        }
-        .explore-list-item:hover {
-            opacity: 0.6;
-        }
-        .explore-list-item .num {
-            background-color: #7B2E24;
-            color: #EFE7DB;
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.65rem;
-            font-weight: 600;
-            flex-shrink: 0;
-        }
+        .map-pin { position: absolute; width: 24px; height: 24px; background-color: #7B2E24; color: #EFE7DB; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: 600; transform: translate(-50%, -50%); cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: transform 0.2s; border: 1.5px solid #EFE7DB; z-index: 20; pointer-events: auto; }
+        .map-pin:hover { transform: translate(-50%, -50%) scale(1.2); background-color: #5C2119; }
+        .map-pin.active-pin { background-color: #5C2119; transform: translate(-50%, -50%) scale(1.3); box-shadow: 0 0 0 2px #EFE7DB, 0 0 0 4px #7B2E24; z-index: 30; }
         
-        .explore-card {
-            background-color: #F8F5F0;
-            border-radius: 4px;
-            overflow: hidden;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            border: 1px solid rgba(123, 46, 36, 0.1);
-            padding: 0.3rem;
-        }
-        .explore-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
-        }
+        .explore-list-item { display: flex; align-items: center; gap: 1rem; padding: 0.4rem 0; cursor: pointer; transition: opacity 0.2s; color: #1C1917; }
+        .explore-list-item:hover { opacity: 0.6; }
+        .explore-list-item .num { background-color: #7B2E24; color: #EFE7DB; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: 600; flex-shrink: 0; }
         
-        .hide-scrollbar::-webkit-scrollbar {
-            display: none;
-        }
-        .hide-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
+        .explore-card { background-color: #F8F5F0; border-radius: 4px; overflow: hidden; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; border: 1px solid rgba(123, 46, 36, 0.1); padding: 0.3rem; }
+        .explore-card:hover { transform: translateY(-2px); box-shadow: 0 8px 15px rgba(0,0,0,0.1); }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body class="antialiased font-sans">
 
     <header class="fixed top-0 left-0 w-full z-[100] px-8 py-6 flex justify-between items-start pointer-events-none">
-        <!-- Logo Area -->
         <div class="flex items-center gap-4 pointer-events-auto cursor-pointer" onclick="navigate('home')">
             <div class="w-12 h-12 border border-brand-red flex items-center justify-center rounded-sm">
                 <i class="ph ph-buildings text-2xl text-brand-red"></i>
@@ -337,164 +123,56 @@
             <div class="logo-text">
                 <p class="text-[0.65rem] tracking-[0.2em] uppercase text-brand-muted mb-1">Sardar Vallabhbhai</p>
                 <h1 class="font-serif text-2xl font-bold text-brand-red tracking-wide leading-none">POORNA MARKET</h1>
-                <p class="text-[0.65rem] tracking-[0.15em] uppercase text-brand-muted mt-2">Vizag's People's Market</p>
-                <p class="text-[0.6rem] tracking-[0.25em] uppercase text-brand-muted">Then &middot; Now &middot; Tomorrow</p>
+                <p class="text-[0.6rem] tracking-[0.25em] uppercase text-brand-muted mt-2">Then &middot; Now &middot; Tomorrow</p>
             </div>
         </div>
 
-        <!-- Main Navigation -->
         <nav class="flex gap-10 mt-2 pointer-events-auto">
             <button class="nav-link active" onclick="navigate('home')" data-target="home">HOME</button>
             <button class="nav-link" onclick="navigate('explore')" data-target="explore">EXPLORE</button>
-            <button class="nav-link" onclick="navigate('gallery')" data-target="gallery">GALLERY</button>
             <button class="nav-link" onclick="navigate('viewer')" data-target="viewer">VIEWER</button>
-            <button class="nav-link" onclick="navigate('zone-view')" data-target="zone-view">ZONE VIEW</button>
         </nav>
-
-        <!-- Right Icons -->
-        <div class="flex gap-6 mt-2 pointer-events-auto logo-text">
-            <button><i class="ph ph-magnifying-glass text-xl"></i></button>
-            <button><i class="ph ph-list text-xl"></i></button>
-        </div>
     </header>
 
     <main id="app-container" class="relative w-full h-screen">
 
-        <!-- ==================== HOME SECTION ==================== -->
+        <!-- HOME -->
         <section id="home" class="page-section active">
-            <!-- Background Layers -->
             <div class="split-bg-container">
-                <div class="split-left"></div>
-                <div class="split-right"></div>
-                <div class="texture-overlay"></div>
+                <div class="split-left"></div><div class="split-right"></div><div class="texture-overlay"></div>
             </div>
-
-            <!-- Content Container -->
             <div class="absolute inset-0 flex flex-col justify-center px-24 z-10">
                 <div class="max-w-md ml-12 mt-16">
-                    <h2 class="font-serif text-6xl text-brand-red font-bold leading-tight mb-4">
-                        A PEOPLE'S<br>MARKET
-                    </h2>
-                    <p class="text-sm tracking-[0.2em] font-semibold text-brand-dark mb-8">
-                        THEN &middot; NOW &middot; TOMORROW
-                    </p>
-                    
-                    <div class="h-[2px] w-16 bg-brand-red mb-8"></div>
-                    
-                    <p class="text-brand-dark text-sm leading-relaxed mb-8 pr-12">
-                        Explore the transformation of Poorna Market in 360° and experience its legacy, people and future as a vibrant public marketplace for Visakhapatnam.
-                    </p>
-
-                    <button onclick="navigate('viewer')" class="bg-brand-red text-white text-xs font-semibold tracking-widest uppercase px-8 py-4 rounded-sm flex items-center gap-4 hover:bg-[#5C2119] transition-colors shadow-lg">
+                    <h2 class="font-serif text-6xl text-brand-red font-bold leading-tight mb-4">A PEOPLE'S<br>MARKET</h2>
+                    <p class="text-sm tracking-[0.2em] font-semibold text-brand-dark mb-8">THEN &middot; NOW &middot; TOMORROW</p>
+                    <button onclick="navigate('viewer')" class="bg-brand-red text-white text-xs font-semibold tracking-widest uppercase px-8 py-4 rounded-sm hover:bg-[#5C2119] transition-colors">
                         ENTER 360° EXPERIENCE <i class="ph ph-arrow-right text-lg"></i>
                     </button>
                 </div>
             </div>
-
-            <div class="absolute bottom-8 left-8 right-8 flex justify-between items-end z-10 px-8">
-                <!-- Pagination -->
-                <div class="flex items-center gap-4 text-xs font-semibold text-brand-red">
-                    <span class="flex items-center gap-2">01 <div class="w-12 h-[1px] bg-brand-red"></div></span>
-                    <span class="text-brand-muted opacity-50">02</span>
-                    <span class="text-brand-muted opacity-50">03</span>
-                </div>
-
-                <!-- Features Array -->
-                <div class="flex gap-16 mr-24">
-                    <div class="flex flex-col items-center gap-2">
-                        <i class="ph ph-storefront text-2xl text-brand-red"></i>
-                        <span class="text-[0.6rem] uppercase tracking-widest text-center text-brand-dark">Vibrant<br>Public Realm</span>
-                    </div>
-                    <div class="flex flex-col items-center gap-2">
-                        <i class="ph ph-leaf text-2xl text-brand-red"></i>
-                        <span class="text-[0.6rem] uppercase tracking-widest text-center text-brand-dark">People-Centric<br>Design</span>
-                    </div>
-                    <div class="flex flex-col items-center gap-2">
-                        <i class="ph ph-bank text-2xl text-brand-red"></i>
-                        <span class="text-[0.6rem] uppercase tracking-widest text-center text-brand-dark">Retained<br>Landmarks</span>
-                    </div>
-                    <div class="flex flex-col items-center gap-2">
-                        <i class="ph ph-graph text-2xl text-brand-red"></i>
-                        <span class="text-[0.6rem] uppercase tracking-widest text-center text-brand-dark">Better<br>Connectivity</span>
-                    </div>
-                </div>
-
-                <!-- Location -->
-                <div class="flex items-center gap-2 text-brand-dark text-xs font-semibold tracking-widest uppercase">
-                    <i class="ph-fill ph-map-pin text-brand-red"></i> Visakhapatnam
-                </div>
-            </div>
-            
-            <!-- Compass Icon Overlay -->
-            <div class="absolute top-24 right-12 z-10 opacity-70">
-                <i class="ph ph-compass text-4xl text-brand-dark"></i>
-            </div>
         </section>
 
-        <!-- ==================== EXPLORE SECTION ==================== -->
+        <!-- EXPLORE -->
         <section id="explore" class="page-section bg-[#EFE7DB]">
             <div class="texture-overlay"></div>
-            
             <div class="w-full h-full pt-32 pb-12 px-12 flex gap-8 z-10 relative">
-                
-                <!-- Left Panel: Text & List -->
                 <div class="w-[22%] flex flex-col pt-4">
-                    <div class="text-[0.6rem] tracking-[0.2em] uppercase text-brand-red mb-4 font-bold">
-                        HOME <span class="mx-2">></span> EXPLORE
-                    </div>
-                    <h2 class="font-serif text-[2.5rem] text-brand-red leading-tight mb-4 tracking-wide">
-                        EXPLORE<br>POORNA MARKET
-                    </h2>
-                    <p class="text-xs text-brand-dark leading-relaxed mb-6 pr-4">
-                        Select a location from the key plan and enter the 360° experience to explore the market then, now and proposed through immersive views.
-                    </p>
-                    
-                    <div class="flex flex-col gap-1 mt-2" id="explore-text-list">
-                        <!-- Populated dynamically via JS -->
-                    </div>
+                    <h2 class="font-serif text-[2.5rem] text-brand-red leading-tight mb-4">EXPLORE<br>POORNA MARKET</h2>
+                    <div class="flex flex-col gap-1 mt-2" id="explore-text-list"></div>
                 </div>
-
-                <!-- Center Panel: Key Plan Map -->
                 <div class="w-[53%] relative flex items-center justify-center p-2">
                     <div class="relative inline-block max-w-full max-h-full">
-                        <img src="explore-page-site-plan.png" id="key-plan-img" alt="Poorna Market Key Plan" class="max-w-full max-h-full object-contain mix-blend-multiply" />
-                        
-                        <!-- Map Pins Container Overlay -->
-                        <div id="map-pins-container" class="absolute top-0 left-0 w-full h-full pointer-events-none">
-                            <!-- Populated dynamically via JS -->
-                        </div>
+                        <img src="explore-page-site-plan.png" id="key-plan-img" class="max-w-full max-h-full object-contain mix-blend-multiply" />
+                        <div id="map-pins-container" class="absolute top-0 left-0 w-full h-full pointer-events-none"></div>
                     </div>
                 </div>
-
-                <!-- Right Panel: Image Cards -->
                 <div class="w-[25%] h-full flex flex-col relative pt-4">
-                    <div class="overflow-y-auto hide-scrollbar flex-1 flex flex-col gap-3 pb-24" id="explore-cards-list">
-                        <!-- Populated dynamically via JS -->
-                    </div>
-                    
-                    <!-- Bottom Gradient Overlay & Button -->
-                    <div class="absolute bottom-0 left-0 w-full bg-gradient-to-t from-[#EFE7DB] via-[#EFE7DB] to-transparent pt-16 pb-4">
-                        <button class="w-full bg-[#7B2E24] text-[#EFE7DB] text-[0.65rem] font-bold tracking-[0.2em] uppercase py-4 rounded-sm hover:bg-[#5C2119] transition-colors shadow-lg flex items-center justify-center gap-3">
-                            SELECT A LOCATION <i class="ph ph-arrow-right text-sm"></i>
-                        </button>
-                    </div>
+                    <div class="overflow-y-auto hide-scrollbar flex-1 flex flex-col gap-3 pb-24" id="explore-cards-list"></div>
                 </div>
-
             </div>
         </section>
 
-        <!-- ==================== GALLERY & ZONE VIEW ==================== -->
-        <section id="gallery" class="page-section bg-brand-vintage flex items-center justify-center">
-            <div class="texture-overlay"></div>
-            <h2 class="font-serif text-5xl text-brand-red z-10">Design Gallery</h2>
-        </section>
-
-        <section id="zone-view" class="page-section bg-brand-vintage flex items-center justify-center">
-            <div class="texture-overlay"></div>
-            <h2 class="font-serif text-5xl text-brand-red z-10">Masterplan Zones</h2>
-        </section>
-
-        <!-- ==================== VIEWER SECTION (Three.js WebXR) ==================== -->
+        <!-- VIEWER -->
         <section id="viewer" class="page-section bg-[#1C1917]">
             <canvas id="webgl-canvas"></canvas>
 
@@ -531,568 +209,384 @@
             </div>
 
             <!-- 2D SCREEN UI: Right Panel -->
-            <div id="vr-desc-panel" class="vintage-panel flex flex-col hide-scrollbar desktop-only">
+            <div id="vr-desc-panel" class="vintage-panel flex flex-col hide-scrollbar desktop-only" style="max-height: calc(100vh - 380px);">
                 <div class="text-[0.6rem] tracking-[0.2em] uppercase text-brand-red mb-2 font-bold" id="desc-num">00</div>
                 <h4 id="desc-title" class="font-serif text-lg text-brand-red leading-tight mb-3 tracking-wide">Select a Zone</h4>
-                
-                <div class="w-full h-20 bg-[#EFE7DB] rounded-sm mb-3 overflow-hidden relative shrink-0">
-                    <img id="desc-img" src="https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?q=80&w=400&h=200&auto=format&fit=crop" class="w-full h-full object-cover mix-blend-multiply" alt="Zone Preview">
-                    <div class="absolute inset-0 bg-brand-vintage mix-blend-multiply opacity-20"></div>
+                <div class="w-full h-24 bg-[#EFE7DB] rounded-sm mb-3 overflow-hidden relative shrink-0">
+                    <img id="desc-img" src="https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?q=80&w=400&h=200&auto=format&fit=crop" class="w-full h-full object-cover mix-blend-multiply">
                 </div>
-
-                <p id="desc-text" class="text-[0.6rem] text-brand-dark leading-relaxed">
-                    Navigate via the Explore tab to view specific historical context, masterplan rationale, and architectural interventions applied to this specific area of Poorna Market.
-                </p>
+                <p id="desc-text" class="text-[0.6rem] text-brand-dark leading-relaxed">Navigate via the Explore tab to view specific historical context and architectural interventions applied to this area.</p>
             </div>
 
             <!-- 2D SCREEN UI: Mini Map Widget -->
             <div id="mini-map-widget" class="absolute bottom-[5.5rem] right-8 bg-[rgba(248,245,240,0.92)] backdrop-blur-md border border-[rgba(123,46,36,0.2)] rounded-sm shadow-2xl p-2 z-[100] desktop-only">
                 <div class="flex justify-between items-center mb-1.5">
-                    <div class="text-[0.55rem] font-bold text-brand-red uppercase tracking-widest">Jump to Location</div>
+                    <div class="text-[0.55rem] font-bold text-brand-red uppercase tracking-widest">Navigation Map</div>
                     <i class="ph ph-map-trifold text-brand-red text-sm"></i>
                 </div>
                 <div class="relative w-full aspect-[4/3] bg-white rounded-sm border border-black/5 overflow-hidden">
-                    <img src="explore-page-site-plan.png" class="w-full h-full object-contain mix-blend-multiply" alt="Mini Key Plan" />
+                    <img src="explore-page-site-plan.png" class="w-full h-full object-contain mix-blend-multiply" />
                     <div id="mini-map-pins" class="absolute inset-0 pointer-events-none"></div>
                 </div>
             </div>
 
             <!-- WebXR Button -->
-            <button id="vr-button" class="absolute bottom-8 right-8 bg-brand-red text-brand-vintage font-bold px-6 py-3 rounded-sm shadow-[0_10px_20px_rgba(123,46,36,0.3)] text-xs tracking-[0.15em] uppercase hover:bg-[#5C2119] transition-colors z-[100]">
+            <button id="vr-button" class="absolute bottom-8 right-8 bg-brand-red text-brand-vintage font-bold px-6 py-3 rounded-sm text-xs tracking-[0.15em] uppercase hover:bg-[#5C2119] z-[100]">
                 ENTER VR
             </button>
-            
             <div class="absolute bottom-8 left-8 text-brand-vintage bg-[#1C1917]/80 backdrop-blur px-4 py-2 rounded-sm border border-white/10 text-xs tracking-wide desktop-only">
                 Drag to look &middot; Scroll to zoom
             </div>
         </section>
-
     </main>
 
     <script>
-        // ==========================================
-        // SPA NAVIGATION & DATA LOGIC
-        // ==========================================
-        
+        // --- DATA ---
         const exploreLocations = [
-            { id: 1, num: "01", title: "Main Entrance", top: "72%", left: "54%", img: "https://images.unsplash.com/photo-1533900298318-6b8da08a523e?q=80&w=400&h=150&auto=format&fit=crop", desc: "The grand gateway to Poorna Market, redesigned to welcome pedestrians with shaded canopies and clear wayfinding while respecting the heritage facade." },
-            { id: 2, num: "02", title: "Clock Tower", top: "41%", left: "52%", img: "https://images.unsplash.com/photo-1582555172866-f73bb12a2ab3?q=80&w=400&h=150&auto=format&fit=crop", desc: "The historical heart of the market. The surrounding plaza has been opened up to create a vibrant public gathering space and focal point for community events." },
-            { id: 3, num: "03", title: "Central Spine", top: "56%", left: "53%", img: "https://images.unsplash.com/photo-1519624233777-624219356b73?q=80&w=400&h=150&auto=format&fit=crop", desc: "A widened, pedestrian-friendly central corridor with integrated seating and greenery, connecting the main entrance directly to the Clock Tower." },
-            { id: 4, num: "04", title: "Vegetable Zone", top: "59%", left: "40%", img: "https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=400&h=150&auto=format&fit=crop", desc: "Upgraded vendor stalls with improved natural ventilation, sanitary drainage systems, and modular display racks to maintain freshness and hygiene." },
-            { id: 5, num: "05", title: "Fish & Meat Zone", top: "57%", left: "68%", img: "https://images.unsplash.com/photo-1534723452862-4c874018d66d?q=80&w=400&h=150&auto=format&fit=crop", desc: "A specialized, climate-controlled sub-market featuring dedicated waste management and continuous cold-chain support infrastructure." },
-            { id: 6, num: "06", title: "Flower & Pooja Zone", top: "37%", left: "36%", img: "https://images.unsplash.com/photo-1563241527-3004b7be0ffd?q=80&w=400&h=150&auto=format&fit=crop", desc: "A fragrant, colorful precinct situated near the temple axis, featuring tiered display stands and shaded walkways for early morning trading." },
-            { id: 7, num: "07", title: "Retail Stalls", top: "41%", left: "64%", img: "https://images.unsplash.com/photo-1555529733-0e67056058e1?q=80&w=400&h=150&auto=format&fit=crop", desc: "Organized permanent retail units for dry goods and textiles, featuring uniform signage guidelines to create a cohesive visual identity." },
-            { id: 8, num: "08", title: "Food Court", top: "27%", left: "68%", img: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?q=80&w=400&h=150&auto=format&fit=crop", desc: "A new culinary destination offering local street food in a safe, hygienic environment with ample communal seating under a protective canopy." },
-            { id: 9, num: "09", title: "Service Area", top: "20%", left: "49%", img: "https://images.unsplash.com/photo-1587293852726-694b630e2de3?q=80&w=400&h=150&auto=format&fit=crop", desc: "Consolidated backend logistics hub managing deliveries, waste sorting, and utilities without disrupting the pedestrian flow in the primary market zones." }
+            { id: 1, num: "01", title: "Main Entrance", top: "75%", left: "55%", img: "https://images.unsplash.com/photo-1533900298318-6b8da08a523e?q=80&w=400&h=150&auto=format&fit=crop", desc: "The grand gateway to Poorna Market, redesigned to welcome pedestrians." },
+            { id: 2, num: "02", title: "Clock Tower", top: "45%", left: "54%", img: "https://images.unsplash.com/photo-1582555172866-f73bb12a2ab3?q=80&w=400&h=150&auto=format&fit=crop", desc: "The historical heart of the market with a new vibrant public plaza." },
+            { id: 3, num: "03", title: "Central Spine", top: "60%", left: "55%", img: "https://images.unsplash.com/photo-1519624233777-624219356b73?q=80&w=400&h=150&auto=format&fit=crop", desc: "A widened, pedestrian-friendly central corridor with integrated seating." },
+            { id: 4, num: "04", title: "Vegetable Zone", top: "62%", left: "42%", img: "https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=400&h=150&auto=format&fit=crop", desc: "Upgraded vendor stalls with improved natural ventilation and modular racks." },
+            { id: 5, num: "05", title: "Fish & Meat Zone", top: "60%", left: "70%", img: "https://images.unsplash.com/photo-1534723452862-4c874018d66d?q=80&w=400&h=150&auto=format&fit=crop", desc: "A climate-controlled sub-market featuring dedicated waste management." },
+            { id: 6, num: "06", title: "Flower & Pooja", top: "40%", left: "38%", img: "https://images.unsplash.com/photo-1563241527-3004b7be0ffd?q=80&w=400&h=150&auto=format&fit=crop", desc: "A fragrant precinct situated near the temple axis with shaded walkways." },
+            { id: 7, num: "07", title: "Retail Stalls", top: "44%", left: "66%", img: "https://images.unsplash.com/photo-1555529733-0e67056058e1?q=80&w=400&h=150&auto=format&fit=crop", desc: "Organized permanent retail units for dry goods and textiles." },
+            { id: 8, num: "08", title: "Food Court", top: "30%", left: "70%", img: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?q=80&w=400&h=150&auto=format&fit=crop", desc: "Culinary destination offering local street food in a safe environment." },
+            { id: 9, num: "09", title: "Service Area", top: "23%", left: "51%", img: "https://images.unsplash.com/photo-1587293852726-694b630e2de3?q=80&w=400&h=150&auto=format&fit=crop", desc: "Backend logistics hub managing deliveries without disrupting the market." }
         ];
 
-        let currentLocationData = null;
+        let currentLocationData = exploreLocations[0];
 
+        // --- SPA LOGIC ---
         function initExploreSection() {
             const listContainer = document.getElementById('explore-text-list');
             const cardsContainer = document.getElementById('explore-cards-list');
-
-            if (!listContainer || !cardsContainer) return;
-
             exploreLocations.forEach(loc => {
-                const listItem = document.createElement('div');
-                listItem.className = 'explore-list-item';
+                const listItem = document.createElement('div'); listItem.className = 'explore-list-item';
                 listItem.innerHTML = `<div class="num">${loc.num}</div><span class="text-[0.7rem] font-semibold">${loc.title}</span>`;
-                listItem.onclick = () => openLocationInViewer(loc);
-                listContainer.appendChild(listItem);
+                listItem.onclick = () => openLocationInViewer(loc); listContainer.appendChild(listItem);
 
-                const card = document.createElement('div');
-                card.className = 'explore-card group bg-white relative';
+                const card = document.createElement('div'); card.className = 'explore-card group bg-white relative';
                 card.onclick = () => openLocationInViewer(loc);
-                card.innerHTML = `
-                    <div class="relative w-full h-20 rounded-[2px] overflow-hidden mb-2">
-                        <img src="${loc.img}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="${loc.title}">
-                    </div>
-                    <div class="flex items-center gap-3 px-2 pb-1">
-                        <div class="w-5 h-5 rounded-full bg-brand-red text-white flex items-center justify-center text-[0.55rem] font-bold shrink-0">${loc.num}</div>
-                        <span class="text-[0.65rem] font-semibold text-brand-dark">${loc.title}</span>
-                    </div>
-                `;
+                card.innerHTML = `<div class="relative w-full h-20 overflow-hidden mb-2"><img src="${loc.img}" class="w-full h-full object-cover"></div>
+                                  <div class="flex items-center gap-3 px-2 pb-1"><div class="w-5 h-5 rounded-full bg-brand-red text-white flex items-center justify-center text-[0.55rem] font-bold">${loc.num}</div><span class="text-[0.65rem] font-semibold">${loc.title}</span></div>`;
                 cardsContainer.appendChild(card);
             });
-
-            createMapPins('map-pins-container');
-            createMapPins('mini-map-pins');
+            createMapPins('map-pins-container'); createMapPins('mini-map-pins');
         }
 
         function createMapPins(containerId) {
             const container = document.getElementById(containerId);
             if(!container) return;
-            
             container.innerHTML = ''; 
             exploreLocations.forEach(loc => {
                 const pin = document.createElement('div');
                 pin.className = `map-pin map-pin-${loc.id}`; 
-                pin.style.top = loc.top;
-                pin.style.left = loc.left;
-                pin.innerText = loc.num;
-                pin.onclick = () => openLocationInViewer(loc);
-                pin.title = loc.title;
-                container.appendChild(pin);
+                pin.style.top = loc.top; pin.style.left = loc.left; pin.innerText = loc.num;
+                pin.onclick = () => openLocationInViewer(loc); container.appendChild(pin);
             });
-        }
-
-        function updateActivePins(activeId) {
-            document.querySelectorAll('.map-pin').forEach(pin => pin.classList.remove('active-pin'));
-            document.querySelectorAll(`.map-pin-${activeId}`).forEach(pin => pin.classList.add('active-pin'));
         }
 
         function openLocationInViewer(loc) {
             currentLocationData = loc;
-            updateActivePins(loc.id);
+            document.querySelectorAll('.map-pin').forEach(pin => pin.classList.remove('active-pin'));
+            document.querySelectorAll(`.map-pin-${loc.id}`).forEach(pin => pin.classList.add('active-pin'));
 
-            // Update Desktop UI
-            const viewerTitle = document.querySelector('#vr-ui-container h3');
-            if(viewerTitle) viewerTitle.innerText = `${loc.num} - 360° Studio`;
+            document.getElementById('desc-num').innerText = `Location ${loc.num}`;
+            document.getElementById('desc-title').innerText = loc.title;
+            document.getElementById('desc-text').innerText = loc.desc;
 
-            const descNum = document.getElementById('desc-num');
-            const descTitle = document.getElementById('desc-title');
-            const descImg = document.getElementById('desc-img');
-            const descText = document.getElementById('desc-text');
-            
-            if(descNum) descNum.innerText = `Location ${loc.num}`;
-            if(descTitle) descTitle.innerText = loc.title;
-            if(descImg) descImg.src = loc.img;
-            if(descText) descText.innerText = loc.desc;
-
-            // Generate temporary 3D sphere textures
-            if (siteSphere && siteSphere.material) {
+            if (siteSphere && renderMaterial) {
                 siteSphere.material.map = createFallbackTexture('#1e293b', `${loc.title.toUpperCase()} (EXISTING)`);
-                siteSphere.material.needsUpdate = true;
-            }
-            if (renderMaterial) {
                 scheme1Texture = createFallbackTexture('#0f766e', `${loc.title.toUpperCase()} (SCHEME A)`);
                 scheme2Texture = createFallbackTexture('#4338ca', `${loc.title.toUpperCase()} (SCHEME B)`);
-                
-                renderMaterial.map = scheme1Texture;
-                renderMaterial.needsUpdate = true;
-                
-                document.getElementById('btn-scheme1').classList.add('active-scheme');
-                document.getElementById('btn-scheme2').classList.remove('active-scheme');
+                renderMaterial.map = activeSchemeVr === 1 ? scheme1Texture : scheme2Texture;
             }
-
-            // Update VR Canvases if initialized
+            
             updateVRInfoCanvas(loc);
-            updateVRControlCanvas(1);
-
             navigate('viewer');
         }
 
+        function navigate(targetId) {
+            document.querySelectorAll('.nav-link').forEach(link => link.classList.toggle('active', link.getAttribute('data-target') === targetId));
+            document.querySelectorAll('.page-section').forEach(section => section.classList.toggle('active', section.id === targetId));
+            document.body.classList.toggle('viewer-mode', targetId === 'viewer');
+            if(targetId === 'viewer' && typeof onWindowResize === 'function') setTimeout(onWindowResize, 100); 
+        }
         initExploreSection();
 
-        function navigate(targetId) {
-            document.querySelectorAll('.nav-link').forEach(link => {
-                link.classList.toggle('active', link.getAttribute('data-target') === targetId);
-            });
-
-            document.querySelectorAll('.page-section').forEach(section => {
-                section.classList.toggle('active', section.id === targetId);
-            });
-
-            if(targetId === 'viewer') {
-                document.body.classList.add('viewer-mode');
-                if (typeof onWindowResize === 'function') setTimeout(onWindowResize, 100); 
-            } else {
-                document.body.classList.remove('viewer-mode');
-            }
-        }
-
-
-        // ==========================================
-        // THREE.JS VR STUDIO & 3D UI LOGIC
-        // ==========================================
+        // --- THREE.JS VR STUDIO LOGIC ---
         let scene, camera, renderer;
-        let siteSphere, renderSphere, renderMaterial;
-        let scheme1Texture, scheme2Texture;
-        let activeSchemeVr = 1;
+        let siteSphere, renderSphere, renderMaterial, scheme1Texture, scheme2Texture;
         
+        // VR State & Canvas Elements
         let vrUIGroup; 
-        let vrControlMesh, vrInfoMesh;
-        let vrControlCtx, vrInfoCtx;
-        let vrControlTex, vrInfoTex;
-
-        let controller1, controller2;
-        let raycaster;
+        let vrControlMesh, vrInfoMesh, vrMapMesh;
+        let vrControlCtx, vrInfoCtx, vrMapCtx;
+        let vrControlTex, vrInfoTex, vrMapTex;
+        
+        let activeSchemeVr = 1;
+        let currentOpacityVr = 0.5;
+        let currentYawVr = 0;
+        
+        let controller1, controller2, raycaster;
         let workingMatrix = new THREE.Matrix4();
-
-        let isUserInteracting = false;
-        let lon = 0, lat = 0, onPointerDownLon = 0, onPointerDownLat = 0;
-        let onPointerDownPointerX = 0, onPointerDownPointerY = 0;
+        let isUserInteracting = false; let lon = 0, lat = 0, onPointerDownLon = 0, onPointerDownLat = 0, onPointerDownPointerX = 0, onPointerDownPointerY = 0;
 
         init3D();
         animate3D();
 
         function init3D() {
             const canvas = document.getElementById('webgl-canvas');
-
             scene = new THREE.Scene();
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
             camera.target = new THREE.Vector3(0, 0, 0);
 
             renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
-            renderer.setPixelRatio(window.devicePixelRatio);
-            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio); renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.xr.enabled = true;
 
-            const geometry = new THREE.SphereGeometry(500, 60, 40);
-            geometry.scale(-1, 1, 1);
-
-            siteSphere = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ color: 0x222222 }));
-            scene.add(siteSphere);
-            
-            scheme1Texture = createFallbackTexture('#0f766e', 'SCHEME A');
-            scheme2Texture = createFallbackTexture('#4338ca', 'SCHEME B');
-
+            const geometry = new THREE.SphereGeometry(500, 60, 40); geometry.scale(-1, 1, 1);
+            siteSphere = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ color: 0x222222 })); scene.add(siteSphere);
+            scheme1Texture = createFallbackTexture('#0f766e', 'SCHEME A'); scheme2Texture = createFallbackTexture('#4338ca', 'SCHEME B');
             renderMaterial = new THREE.MeshBasicMaterial({ map: scheme1Texture, transparent: true, opacity: 0.5 });
-            renderSphere = new THREE.Mesh(geometry, renderMaterial);
-            scene.add(renderSphere);
+            renderSphere = new THREE.Mesh(geometry, renderMaterial); scene.add(renderSphere);
 
-            // WebXR Setup
             setupWebXRButton();
-            setupVRControllers();
             createVRUIPanels();
+            setupVRControllers();
+            setupDesktopUIControls();
 
-            // Desktop Interactions
-            setupUIControls();
             window.addEventListener('resize', onWindowResize);
-            canvas.addEventListener('pointerdown', onPointerDown);
-            canvas.addEventListener('pointermove', onPointerMove);
-            canvas.addEventListener('pointerup', onPointerUp);
-            canvas.addEventListener('wheel', onDocumentMouseWheel);
+            canvas.addEventListener('pointerdown', onPointerDown); canvas.addEventListener('pointermove', onPointerMove);
+            canvas.addEventListener('pointerup', onPointerUp); canvas.addEventListener('wheel', onDocumentMouseWheel);
         }
 
-        // =======================
-        // VR UI: Controllers & Canvas Textures
-        // =======================
-        function setupVRControllers() {
-            raycaster = new THREE.Raycaster();
-
-            function onSelectStart(event) {
-                const controller = event.target;
-                const intersections = getIntersections(controller);
-
-                if (intersections.length > 0) {
-                    const intersection = intersections[0];
-                    if (intersection.object === vrControlMesh) {
-                        const uv = intersection.uv;
-                        // Simple split check: Left half is Scheme A, Right half is Scheme B
-                        if (uv.x < 0.5) {
-                            activeSchemeVr = 1;
-                            renderMaterial.map = scheme1Texture;
-                            document.getElementById('btn-scheme1').click(); // sync desktop
-                        } else {
-                            activeSchemeVr = 2;
-                            renderMaterial.map = scheme2Texture;
-                            document.getElementById('btn-scheme2').click(); // sync desktop
-                        }
-                        renderMaterial.needsUpdate = true;
-                        updateVRControlCanvas(activeSchemeVr);
-                    }
-                }
-            }
-
-            const geometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, -1)]);
-            const material = new THREE.LineBasicMaterial({ color: 0xff0000 });
-            const line = new THREE.Line(geometry, material);
-            line.name = 'line';
-            line.scale.z = 5;
-
-            controller1 = renderer.xr.getController(0);
-            controller1.addEventListener('selectstart', onSelectStart);
-            controller1.add(line.clone());
-            scene.add(controller1);
-
-            controller2 = renderer.xr.getController(1);
-            controller2.addEventListener('selectstart', onSelectStart);
-            controller2.add(line.clone());
-            scene.add(controller2);
-        }
-
-        function getIntersections(controller) {
-            workingMatrix.identity().extractRotation(controller.matrixWorld);
-            raycaster.ray.origin.setFromMatrixPosition(controller.matrixWorld);
-            raycaster.ray.direction.set(0, 0, -1).applyMatrix4(workingMatrix);
-            return raycaster.intersectObjects([vrControlMesh], false);
-        }
-
+        // --- VR UI CANVAS CREATION & DRAWING ---
         function createVRUIPanels() {
-            vrUIGroup = new THREE.Group();
-            scene.add(vrUIGroup);
-            vrUIGroup.visible = false; // Only show in VR
+            vrUIGroup = new THREE.Group(); scene.add(vrUIGroup); vrUIGroup.visible = false;
 
-            // Setup Canvas Textures
-            const controlCanvas = document.createElement('canvas');
-            controlCanvas.width = 1024; controlCanvas.height = 512;
-            vrControlCtx = controlCanvas.getContext('2d');
-            vrControlTex = new THREE.CanvasTexture(controlCanvas);
+            // Textures & Contexts
+            const canvasConfig = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return { ctx: c.getContext('2d'), tex: new THREE.CanvasTexture(c) }; };
+            const control = canvasConfig(800, 1200); vrControlCtx = control.ctx; vrControlTex = control.tex;
+            const info = canvasConfig(800, 1000); vrInfoCtx = info.ctx; vrInfoTex = info.tex;
+            const map = canvasConfig(800, 600); vrMapCtx = map.ctx; vrMapTex = map.tex;
 
-            const infoCanvas = document.createElement('canvas');
-            infoCanvas.width = 1024; infoCanvas.height = 1024;
-            vrInfoCtx = infoCanvas.getContext('2d');
-            vrInfoTex = new THREE.CanvasTexture(infoCanvas);
-
-            // Create Meshes
-            const controlGeo = new THREE.PlaneGeometry(1.5, 0.75);
-            const infoGeo = new THREE.PlaneGeometry(1.5, 1.5);
             const matConfig = { transparent: true, side: THREE.DoubleSide, depthTest: false };
+            vrControlMesh = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 1.8), new THREE.MeshBasicMaterial({ map: vrControlTex, ...matConfig }));
+            vrInfoMesh = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 1.5), new THREE.MeshBasicMaterial({ map: vrInfoTex, ...matConfig }));
+            vrMapMesh = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 0.9), new THREE.MeshBasicMaterial({ map: vrMapTex, ...matConfig }));
 
-            vrControlMesh = new THREE.Mesh(controlGeo, new THREE.MeshBasicMaterial({ map: vrControlTex, ...matConfig }));
-            vrInfoMesh = new THREE.Mesh(infoGeo, new THREE.MeshBasicMaterial({ map: vrInfoTex, ...matConfig }));
+            // Layout Placement
+            vrControlMesh.position.set(-1.4, 1.2, -2.2); vrControlMesh.rotation.y = Math.PI / 8;
+            vrInfoMesh.position.set(1.4, 1.6, -2.2); vrInfoMesh.rotation.y = -Math.PI / 8;
+            vrMapMesh.position.set(1.4, 0.3, -2.2); vrMapMesh.rotation.y = -Math.PI / 8;
 
-            // Position relative to user head
-            vrControlMesh.position.set(-1.2, 1.2, -2);
-            vrControlMesh.rotation.y = Math.PI / 6;
+            vrUIGroup.add(vrControlMesh); vrUIGroup.add(vrInfoMesh); vrUIGroup.add(vrMapMesh);
 
-            vrInfoMesh.position.set(1.2, 1.2, -2);
-            vrInfoMesh.rotation.y = -Math.PI / 6;
-
-            vrUIGroup.add(vrControlMesh);
-            vrUIGroup.add(vrInfoMesh);
-
-            // Draw defaults
-            updateVRControlCanvas(1);
-            updateVRInfoCanvas({ num: '00', title: 'Poorna Market', desc: 'Select a zone from the explore tab before entering VR.' });
+            updateVRControlCanvas(); updateVRInfoCanvas(currentLocationData); updateVRMapCanvas();
         }
 
-        function updateVRControlCanvas(activeScheme) {
-            if(!vrControlCtx) return;
-            const ctx = vrControlCtx;
-            ctx.clearRect(0, 0, 1024, 512);
+        function drawVintagePanel(ctx, w, h, title) {
+            ctx.fillStyle = 'rgba(248, 245, 240, 0.95)'; ctx.fillRect(0, 0, w, h);
+            ctx.strokeStyle = 'rgba(123, 46, 36, 0.5)'; ctx.lineWidth = 10; ctx.strokeRect(5, 5, w-10, h-10);
+            if(title) {
+                ctx.fillStyle = '#7B2E24'; ctx.font = 'bold 50px "Playfair Display", serif';
+                ctx.textAlign = 'center'; ctx.fillText(title, w/2, 80);
+                ctx.strokeStyle = 'rgba(123, 46, 36, 0.2)'; ctx.lineWidth = 2;
+                ctx.beginPath(); ctx.moveTo(50, 110); ctx.lineTo(w-50, 110); ctx.stroke();
+            }
+        }
 
-            // Background panel
-            ctx.fillStyle = 'rgba(248, 245, 240, 0.95)';
-            ctx.fillRect(0, 0, 1024, 512);
+        function updateVRControlCanvas() {
+            const ctx = vrControlCtx; ctx.clearRect(0,0,800,1200);
+            drawVintagePanel(ctx, 800, 1200, "360° Studio");
 
-            // Border
-            ctx.strokeStyle = 'rgba(123, 46, 36, 0.5)';
-            ctx.lineWidth = 10;
-            ctx.strokeRect(5, 5, 1014, 502);
-
-            // Title
-            ctx.fillStyle = '#7B2E24';
-            ctx.font = 'bold 60px "Playfair Display", serif';
-            ctx.textAlign = 'center';
-            ctx.fillText('DESIGN SCHEME SELECTOR', 512, 120);
-
-            ctx.font = '40px sans-serif';
-            ctx.fillStyle = '#1C1917';
-            ctx.fillText('Point controller and pull trigger to select', 512, 190);
-
-            // Button A
-            ctx.fillStyle = activeScheme === 1 ? '#7B2E24' : 'transparent';
-            ctx.fillRect(80, 250, 400, 180);
-            ctx.strokeStyle = '#7B2E24';
-            ctx.lineWidth = 6;
-            ctx.strokeRect(80, 250, 400, 180);
+            ctx.textAlign = 'left'; ctx.font = 'bold 30px sans-serif'; ctx.fillStyle = '#1C1917';
             
-            ctx.fillStyle = activeScheme === 1 ? '#EFE7DB' : '#7B2E24';
-            ctx.font = 'bold 50px sans-serif';
-            ctx.fillText('SCHEME A', 280, 355);
+            // 1. Schemes (Hitboxes: A=[50-380, 250-350], B=[420-750, 250-350])
+            ctx.fillText("1. SELECT SCHEME", 50, 200);
+            ctx.lineWidth = 4; ctx.strokeStyle = '#7B2E24';
+            
+            ctx.fillStyle = activeSchemeVr === 1 ? '#7B2E24' : 'transparent'; ctx.fillRect(50, 250, 330, 100); ctx.strokeRect(50, 250, 330, 100);
+            ctx.fillStyle = activeSchemeVr === 1 ? '#EFE7DB' : '#7B2E24'; ctx.textAlign = 'center'; ctx.fillText("SCHEME A", 215, 310);
+            
+            ctx.fillStyle = activeSchemeVr === 2 ? '#7B2E24' : 'transparent'; ctx.fillRect(420, 250, 330, 100); ctx.strokeRect(420, 250, 330, 100);
+            ctx.fillStyle = activeSchemeVr === 2 ? '#EFE7DB' : '#7B2E24'; ctx.fillText("SCHEME B", 585, 310);
 
-            // Button B
-            ctx.fillStyle = activeScheme === 2 ? '#7B2E24' : 'transparent';
-            ctx.fillRect(544, 250, 400, 180);
-            ctx.strokeStyle = '#7B2E24';
-            ctx.strokeRect(544, 250, 400, 180);
+            // 2. AR Blend (Track: [50-750, 520-560])
+            ctx.textAlign = 'left'; ctx.fillStyle = '#1C1917'; ctx.fillText(`2. AR BLEND: ${Math.round(currentOpacityVr*100)}%`, 50, 480);
+            ctx.fillStyle = 'rgba(123, 46, 36, 0.2)'; ctx.fillRect(50, 530, 700, 10);
+            ctx.fillStyle = '#7B2E24'; ctx.beginPath(); ctx.arc(50 + currentOpacityVr*700, 535, 20, 0, Math.PI*2); ctx.fill();
 
-            ctx.fillStyle = activeScheme === 2 ? '#EFE7DB' : '#7B2E24';
-            ctx.fillText('SCHEME B', 744, 355);
+            // Presets (Hitboxes: Site=[50-380, 620-700], Render=[420-750, 620-700])
+            ctx.fillStyle = 'transparent'; ctx.strokeRect(50, 620, 330, 80); ctx.strokeRect(420, 620, 330, 80);
+            ctx.fillStyle = '#7B2E24'; ctx.textAlign = 'center'; ctx.fillText("SITE ONLY", 215, 670); ctx.fillText("DESIGN ONLY", 585, 670);
+
+            // 3. Yaw (Track: [50-750, 880-920])
+            ctx.textAlign = 'left'; ctx.fillStyle = '#1C1917'; ctx.fillText(`3. YAW: ${Math.round(currentYawVr)}°`, 50, 840);
+            ctx.fillStyle = 'rgba(123, 46, 36, 0.2)'; ctx.fillRect(50, 890, 700, 10);
+            const yawPercent = (currentYawVr + 180) / 360;
+            ctx.fillStyle = '#7B2E24'; ctx.beginPath(); ctx.arc(50 + yawPercent*700, 895, 20, 0, Math.PI*2); ctx.fill();
 
             vrControlTex.needsUpdate = true;
         }
 
-        function updateVRInfoCanvas(locData) {
-            if(!vrInfoCtx) return;
-            const ctx = vrInfoCtx;
-            ctx.clearRect(0, 0, 1024, 1024);
+        function updateVRInfoCanvas(loc) {
+            const ctx = vrInfoCtx; ctx.clearRect(0,0,800,1000);
+            drawVintagePanel(ctx, 800, 1000);
 
-            // Background panel
-            ctx.fillStyle = 'rgba(248, 245, 240, 0.95)';
-            ctx.fillRect(0, 0, 1024, 1024);
-            ctx.strokeStyle = 'rgba(123, 46, 36, 0.5)';
-            ctx.lineWidth = 10;
-            ctx.strokeRect(5, 5, 1014, 1014);
+            ctx.fillStyle = '#7B2E24'; ctx.font = 'bold 35px sans-serif'; ctx.textAlign = 'left'; ctx.fillText(`LOCATION ${loc.num}`, 50, 100);
+            ctx.font = 'bold 70px "Playfair Display", serif'; ctx.fillText(loc.title, 50, 180);
 
-            // Content
-            ctx.fillStyle = '#7B2E24';
-            ctx.font = 'bold 50px sans-serif';
-            ctx.textAlign = 'left';
-            ctx.fillText(`LOCATION ${locData.num}`, 80, 140);
+            ctx.fillStyle = '#EFE7DB'; ctx.fillRect(50, 220, 700, 300);
+            ctx.fillStyle = '#7B2E24'; ctx.font = '30px sans-serif'; ctx.textAlign = 'center'; ctx.fillText("[ View Desktop For Image ]", 400, 370);
 
-            ctx.font = 'bold 90px "Playfair Display", serif';
-            ctx.fillText(locData.title, 80, 250);
-
-            // Wrap Text
-            ctx.fillStyle = '#1C1917';
-            ctx.font = '45px sans-serif';
-            const words = locData.desc.split(' ');
-            let line = '';
-            let y = 360;
-            const maxWidth = 860;
-            
-            for(let n = 0; n < words.length; n++) {
+            ctx.fillStyle = '#1C1917'; ctx.textAlign = 'left'; ctx.font = '35px sans-serif';
+            const words = loc.desc.split(' '); let line = ''; let y = 600;
+            for(let n=0; n<words.length; n++) {
                 let testLine = line + words[n] + ' ';
-                let metrics = ctx.measureText(testLine);
-                if (metrics.width > maxWidth && n > 0) {
-                    ctx.fillText(line, 80, y);
-                    line = words[n] + ' ';
-                    y += 65;
-                } else {
-                    line = testLine;
-                }
+                if (ctx.measureText(testLine).width > 700 && n > 0) { ctx.fillText(line, 50, y); line = words[n] + ' '; y += 50; } 
+                else { line = testLine; }
             }
-            ctx.fillText(line, 80, y);
-
+            ctx.fillText(line, 50, y);
             vrInfoTex.needsUpdate = true;
         }
 
-        function createFallbackTexture(bgColor, label) {
-            const canvas = document.createElement('canvas');
-            canvas.width = 2048; canvas.height = 1024;
-            const ctx = canvas.getContext('2d');
-            ctx.fillStyle = bgColor; ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = '#ffffff'; ctx.font = 'bold 72px sans-serif'; ctx.textAlign = 'center';
-            ctx.fillText(label, canvas.width / 2, canvas.height / 2 - 20);
-            return new THREE.CanvasTexture(canvas);
+        function updateVRMapCanvas() {
+            const ctx = vrMapCtx; ctx.clearRect(0,0,800,600);
+            drawVintagePanel(ctx, 800, 600, "Navigation Map");
+
+            // Background placeholder for map
+            ctx.fillStyle = '#ffffff'; ctx.fillRect(50, 120, 700, 430);
+            
+            // Draw crude pins
+            exploreLocations.forEach(loc => {
+                const px = 50 + (parseFloat(loc.left)/100) * 700;
+                const py = 120 + (parseFloat(loc.top)/100) * 430;
+                ctx.fillStyle = (currentLocationData.id === loc.id) ? '#5C2119' : '#7B2E24';
+                ctx.beginPath(); ctx.arc(px, py, 18, 0, Math.PI*2); ctx.fill();
+                ctx.fillStyle = '#EFE7DB'; ctx.font = 'bold 16px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(loc.num, px, py+6);
+            });
+            vrMapTex.needsUpdate = true;
         }
 
-        // =======================
-        // Desktop Interactions
-        // =======================
-        function setupUIControls() {
-            const btn1 = document.getElementById('btn-scheme1');
-            const btn2 = document.getElementById('btn-scheme2');
+        // --- VR CONTROLLER INTERACTIONS ---
+        function setupVRControllers() {
+            raycaster = new THREE.Raycaster();
+            const geometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,-1)]);
+            const material = new THREE.LineBasicMaterial({ color: 0xff0000 });
 
-            btn1.addEventListener('click', () => {
-                renderMaterial.map = scheme1Texture; renderMaterial.needsUpdate = true;
-                btn1.classList.add('active-scheme'); btn2.classList.remove('active-scheme');
-                activeSchemeVr = 1; updateVRControlCanvas(1);
-            });
+            function onSelectStart(e) {
+                workingMatrix.identity().extractRotation(e.target.matrixWorld);
+                raycaster.ray.origin.setFromMatrixPosition(e.target.matrixWorld);
+                raycaster.ray.direction.set(0,0,-1).applyMatrix4(workingMatrix);
 
-            btn2.addEventListener('click', () => {
-                renderMaterial.map = scheme2Texture; renderMaterial.needsUpdate = true;
-                btn2.classList.add('active-scheme'); btn1.classList.remove('active-scheme');
-                activeSchemeVr = 2; updateVRControlCanvas(2);
-            });
-
-            const opacitySlider = document.getElementById('opacity-slider');
-            const opacityVal = document.getElementById('opacity-val');
-            opacitySlider.addEventListener('input', (e) => {
-                const val = parseFloat(e.target.value);
-                renderMaterial.opacity = val;
-                opacityVal.textContent = Math.round(val * 100) + '%';
-            });
-
-            const yawSlider = document.getElementById('yaw-slider');
-            const yawVal = document.getElementById('yaw-val');
-            yawSlider.addEventListener('input', (e) => {
-                const val = parseFloat(e.target.value);
-                renderSphere.rotation.y = THREE.MathUtils.degToRad(val);
-                yawVal.textContent = val + '°';
-            });
-
-            document.getElementById('preset-site').addEventListener('click', () => {
-                opacitySlider.value = 0; opacitySlider.dispatchEvent(new Event('input'));
-            });
-            document.getElementById('preset-render').addEventListener('click', () => {
-                opacitySlider.value = 1; opacitySlider.dispatchEvent(new Event('input'));
-            });
-        }
-
-        function setupWebXRButton() {
-            const vrButton = document.getElementById('vr-button');
-            const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-            const isHttps = window.location.protocol === 'https:';
-
-            if ('xr' in navigator) {
-                if (!isHttps && !isLocalhost) {
-                    vrButton.textContent = 'HTTPS REQUIRED FOR VR';
-                    vrButton.title = 'Please host via GitHub Pages (HTTPS) to use VR.';
-                    return;
+                // Check Control Panel (Left)
+                let hits = raycaster.intersectObject(vrControlMesh);
+                if (hits.length > 0) {
+                    const uv = hits[0].uv; const cx = uv.x * 800; const cy = (1 - uv.y) * 1200;
+                    
+                    if(cy >= 250 && cy <= 350) {
+                        if(cx >= 50 && cx <= 380) { activeSchemeVr = 1; syncControlState(); } // Scheme A
+                        if(cx >= 420 && cx <= 750) { activeSchemeVr = 2; syncControlState(); } // Scheme B
+                    }
+                    if(cy >= 620 && cy <= 700) {
+                        if(cx >= 50 && cx <= 380) { currentOpacityVr = 0; syncControlState(); } // Site Only
+                        if(cx >= 420 && cx <= 750) { currentOpacityVr = 1; syncControlState(); } // Render Only
+                    }
+                    if(cy >= 500 && cy <= 580 && cx >= 50 && cx <= 750) { // AR Blend Track
+                        currentOpacityVr = Math.max(0, Math.min(1, (cx - 50) / 700)); syncControlState();
+                    }
+                    if(cy >= 860 && cy <= 940 && cx >= 50 && cx <= 750) { // Yaw Track
+                        currentYawVr = ((cx - 50) / 700) * 360 - 180; syncControlState();
+                    }
                 }
 
-                navigator.xr.isSessionSupported('immersive-vr').then((supported) => {
-                    if (supported) {
-                        vrButton.textContent = 'ENTER VR';
-                        vrButton.addEventListener('click', () => {
-                            navigator.xr.requestSession('immersive-vr', { optionalFeatures: ['local-floor'] })
-                            .then((session) => { 
-                                renderer.xr.setSession(session); 
-                                
-                                session.addEventListener('end', () => {
-                                    document.querySelectorAll('.desktop-only').forEach(el => el.style.display = 'block');
-                                });
-                            });
+                // Check Map Panel (Right Bottom)
+                hits = raycaster.intersectObject(vrMapMesh);
+                if(hits.length > 0) {
+                    const uv = hits[0].uv; const cx = uv.x * 800; const cy = (1 - uv.y) * 600;
+                    if(cx >= 50 && cx <= 750 && cy >= 120 && cy <= 550) {
+                        let closest = null; let minDist = 9999;
+                        exploreLocations.forEach(loc => {
+                            const px = 50 + (parseFloat(loc.left)/100) * 700; const py = 120 + (parseFloat(loc.top)/100) * 430;
+                            const dist = Math.hypot(px - cx, py - cy);
+                            if(dist < minDist && dist < 40) { minDist = dist; closest = loc; }
                         });
-                    } else { 
-                        vrButton.textContent = 'NO VR HEADSET DETECTED'; 
-                        vrButton.title = 'Connect a Meta Quest or compatible WebXR device.';
+                        if(closest) openLocationInViewer(closest); // Teleport!
                     }
+                }
+            }
+
+            controller1 = renderer.xr.getController(0); controller1.addEventListener('selectstart', onSelectStart); controller1.add(new THREE.Line(geometry, material).clone()); scene.add(controller1);
+            controller2 = renderer.xr.getController(1); controller2.addEventListener('selectstart', onSelectStart); controller2.add(new THREE.Line(geometry, material).clone()); scene.add(controller2);
+        }
+
+        // --- SYNC DESKTOP <-> VR ---
+        function syncControlState() {
+            renderMaterial.map = activeSchemeVr === 1 ? scheme1Texture : scheme2Texture;
+            renderMaterial.opacity = currentOpacityVr;
+            renderSphere.rotation.y = THREE.MathUtils.degToRad(currentYawVr);
+            
+            updateVRControlCanvas();
+
+            // Sync HTML DOM
+            document.getElementById('btn-scheme1').classList.toggle('active-scheme', activeSchemeVr === 1);
+            document.getElementById('btn-scheme2').classList.toggle('active-scheme', activeSchemeVr === 2);
+            document.getElementById('opacity-slider').value = currentOpacityVr; document.getElementById('opacity-val').innerText = Math.round(currentOpacityVr*100) + '%';
+            document.getElementById('yaw-slider').value = currentYawVr; document.getElementById('yaw-val').innerText = Math.round(currentYawVr) + '°';
+        }
+
+        function setupDesktopUIControls() {
+            document.getElementById('btn-scheme1').onclick = () => { activeSchemeVr = 1; syncControlState(); };
+            document.getElementById('btn-scheme2').onclick = () => { activeSchemeVr = 2; syncControlState(); };
+            document.getElementById('preset-site').onclick = () => { currentOpacityVr = 0; syncControlState(); };
+            document.getElementById('preset-render').onclick = () => { currentOpacityVr = 1; syncControlState(); };
+            
+            document.getElementById('opacity-slider').oninput = (e) => { currentOpacityVr = parseFloat(e.target.value); syncControlState(); };
+            document.getElementById('yaw-slider').oninput = (e) => { currentYawVr = parseFloat(e.target.value); syncControlState(); };
+        }
+
+        // --- UTILS ---
+        function setupWebXRButton() {
+            const btn = document.getElementById('vr-button');
+            if ('xr' in navigator) {
+                navigator.xr.isSessionSupported('immersive-vr').then((supported) => {
+                    if(supported) {
+                        btn.onclick = () => {
+                            navigator.xr.requestSession('immersive-vr', {optionalFeatures: ['local-floor']}).then(session => { 
+                                renderer.xr.setSession(session);
+                                session.addEventListener('end', () => { document.querySelectorAll('.desktop-only').forEach(el => el.style.display = 'block'); });
+                            });
+                        };
+                    } else { btn.textContent = 'NO VR HEADSET DETECTED'; }
                 });
-            } else { 
-                vrButton.textContent = 'BROWSER DOES NOT SUPPORT WEBXR'; 
             }
         }
-
-        function onPointerDown(event) {
-            if(!document.getElementById('viewer').classList.contains('active')) return;
-            isUserInteracting = true;
-            onPointerDownPointerX = event.clientX; onPointerDownPointerY = event.clientY;
-            onPointerDownLon = lon; onPointerDownLat = lat;
+        function createFallbackTexture(bgColor, label) {
+            const canvas = document.createElement('canvas'); canvas.width = 2048; canvas.height = 1024; const ctx = canvas.getContext('2d');
+            ctx.fillStyle = bgColor; ctx.fillRect(0, 0, canvas.width, canvas.height); ctx.fillStyle = '#ffffff'; ctx.font = 'bold 72px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(label, canvas.width / 2, canvas.height / 2 - 20); return new THREE.CanvasTexture(canvas);
         }
-
-        function onPointerMove(event) {
-            if (isUserInteracting) {
-                lon = (onPointerDownPointerX - event.clientX) * 0.1 + onPointerDownLon;
-                lat = (event.clientY - onPointerDownPointerY) * 0.1 + onPointerDownLat;
-            }
-        }
-
+        
+        function onPointerDown(e) { if(!document.body.classList.contains('viewer-mode')) return; isUserInteracting = true; onPointerDownPointerX = e.clientX; onPointerDownPointerY = e.clientY; onPointerDownLon = lon; onPointerDownLat = lat; }
+        function onPointerMove(e) { if(isUserInteracting) { lon = (onPointerDownPointerX - e.clientX) * 0.1 + onPointerDownLon; lat = (e.clientY - onPointerDownPointerY) * 0.1 + onPointerDownLat; } }
         function onPointerUp() { isUserInteracting = false; }
+        function onDocumentMouseWheel(e) { if(!document.body.classList.contains('viewer-mode')) return; camera.fov = THREE.MathUtils.clamp(camera.fov + e.deltaY * 0.05, 30, 90); camera.updateProjectionMatrix(); }
+        function onWindowResize() { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); }
 
-        function onDocumentMouseWheel(event) {
-            if(!document.getElementById('viewer').classList.contains('active')) return;
-            const fov = camera.fov + event.deltaY * 0.05;
-            camera.fov = THREE.MathUtils.clamp(fov, 30, 90);
-            camera.updateProjectionMatrix();
-        }
-
-        function onWindowResize() {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        }
-
-        function animate3D() {
-            renderer.setAnimationLoop(render);
-        }
-
+        function animate3D() { renderer.setAnimationLoop(render); }
         function render() {
-            if(document.getElementById('viewer').classList.contains('active')) {
-                
-                // Toggle VR UI visibility based on session state
+            if(document.body.classList.contains('viewer-mode')) {
                 if (renderer.xr.isPresenting) {
                     vrUIGroup.visible = true;
                     document.querySelectorAll('.desktop-only').forEach(el => el.style.display = 'none');
                 } else {
                     vrUIGroup.visible = false;
-                    
-                    // Desktop Camera Controls
                     lat = Math.max(-85, Math.min(85, lat));
-                    const phi = THREE.MathUtils.degToRad(90 - lat);
-                    const theta = THREE.MathUtils.degToRad(lon);
-
-                    camera.target.x = 500 * Math.sin(phi) * Math.cos(theta);
-                    camera.target.y = 500 * Math.cos(phi);
-                    camera.target.z = 500 * Math.sin(phi) * Math.sin(theta);
+                    const phi = THREE.MathUtils.degToRad(90 - lat); const theta = THREE.MathUtils.degToRad(lon);
+                    camera.target.x = 500 * Math.sin(phi) * Math.cos(theta); camera.target.y = 500 * Math.cos(phi); camera.target.z = 500 * Math.sin(phi) * Math.sin(theta);
                     camera.lookAt(camera.target);
                 }
-
                 renderer.render(scene, camera);
             }
         }
