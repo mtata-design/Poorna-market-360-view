@@ -43,7 +43,7 @@
     <style>
         body {
             background-color: #EFE7DB;
-            overflow: hidden; /* Handle scrolling inside sections */
+            overflow: hidden;
         }
 
         /* SPA Section Morphing */
@@ -162,7 +162,7 @@
         /* Vintage Floating Panels for Viewer */
         .vintage-panel {
             position: absolute;
-            top: 140px;
+            top: 130px; /* Lowered from 100px */
             background: rgba(248, 245, 240, 0.92);
             backdrop-filter: blur(12px);
             border: 1px solid rgba(123, 46, 36, 0.2);
@@ -181,15 +181,16 @@
 
         #vr-desc-panel {
             right: 32px;
-            width: 250px;
+            width: 280px; /* Reduced width to prevent overlap */
             transform: translateX(120%);
-            max-height: calc(100vh - 460px);
+            max-height: calc(100vh - 420px); /* Restrict height so it doesn't hit minimap */
             overflow-y: auto;
         }
 
         #mini-map-widget {
             transform: translateY(150%);
             transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            width: 240px; /* Reduced map size */
         }
 
         body.viewer-mode #vr-ui-container, 
@@ -223,7 +224,6 @@
             color: #EFE7DB !important;
         }
 
-        /* Custom Vintage Slider */
         input[type=range].vintage-slider {
             -webkit-appearance: none;
             width: 100%;
@@ -483,13 +483,12 @@
             </div>
         </section>
 
-        <!-- ==================== GALLERY SECTION ==================== -->
+        <!-- ==================== GALLERY & ZONE VIEW ==================== -->
         <section id="gallery" class="page-section bg-brand-vintage flex items-center justify-center">
             <div class="texture-overlay"></div>
             <h2 class="font-serif text-5xl text-brand-red z-10">Design Gallery</h2>
         </section>
 
-        <!-- ==================== ZONE VIEW ==================== -->
         <section id="zone-view" class="page-section bg-brand-vintage flex items-center justify-center">
             <div class="texture-overlay"></div>
             <h2 class="font-serif text-5xl text-brand-red z-10">Masterplan Zones</h2>
@@ -499,8 +498,8 @@
         <section id="viewer" class="page-section bg-[#1C1917]">
             <canvas id="webgl-canvas"></canvas>
 
-            <!-- Left Panel: VR Spatial UI -->
-            <div id="vr-ui-container" class="vintage-panel">
+            <!-- 2D SCREEN UI: Left Panel -->
+            <div id="vr-ui-container" class="vintage-panel desktop-only">
                 <h3 class="font-serif text-2xl text-brand-red font-bold mb-1">360° Studio</h3>
                 <p class="text-[0.65rem] text-brand-muted uppercase tracking-[0.2em] mb-6 pb-4 border-b border-brand-red/20">Scheme Comparison</p>
 
@@ -529,18 +528,14 @@
                     </label>
                     <input type="range" id="yaw-slider" min="-180" max="180" step="0.5" value="0" class="vintage-slider" />
                 </div>
-                
-                <div class="mt-4 pt-4 border-t border-brand-red/20 text-[0.65rem] text-brand-muted" id="file-warning">
-                    * Displaying fallback grid textures.
-                </div>
             </div>
 
-            <!-- Right Panel: Floating Description Panel -->
-            <div id="vr-desc-panel" class="vintage-panel flex flex-col hide-scrollbar">
+            <!-- 2D SCREEN UI: Right Panel -->
+            <div id="vr-desc-panel" class="vintage-panel flex flex-col hide-scrollbar desktop-only">
                 <div class="text-[0.6rem] tracking-[0.2em] uppercase text-brand-red mb-2 font-bold" id="desc-num">00</div>
                 <h4 id="desc-title" class="font-serif text-lg text-brand-red leading-tight mb-3 tracking-wide">Select a Zone</h4>
                 
-                <div class="w-full h-24 bg-[#EFE7DB] rounded-sm mb-3 overflow-hidden relative shrink-0">
+                <div class="w-full h-20 bg-[#EFE7DB] rounded-sm mb-3 overflow-hidden relative shrink-0">
                     <img id="desc-img" src="https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?q=80&w=400&h=200&auto=format&fit=crop" class="w-full h-full object-cover mix-blend-multiply" alt="Zone Preview">
                     <div class="absolute inset-0 bg-brand-vintage mix-blend-multiply opacity-20"></div>
                 </div>
@@ -550,26 +545,24 @@
                 </p>
             </div>
 
-            <!-- Viewer Mini-Map Widget (Keyplan Navigation in 3D Mode) -->
-            <div id="mini-map-widget" class="absolute bottom-[5.5rem] right-8 w-[200px] bg-[rgba(248,245,240,0.92)] backdrop-blur-md border border-[rgba(123,46,36,0.2)] rounded-sm shadow-2xl p-2 z-[100]">
+            <!-- 2D SCREEN UI: Mini Map Widget -->
+            <div id="mini-map-widget" class="absolute bottom-[5.5rem] right-8 bg-[rgba(248,245,240,0.92)] backdrop-blur-md border border-[rgba(123,46,36,0.2)] rounded-sm shadow-2xl p-2 z-[100] desktop-only">
                 <div class="flex justify-between items-center mb-1.5">
                     <div class="text-[0.55rem] font-bold text-brand-red uppercase tracking-widest">Jump to Location</div>
                     <i class="ph ph-map-trifold text-brand-red text-sm"></i>
                 </div>
                 <div class="relative w-full aspect-[4/3] bg-white rounded-sm border border-black/5 overflow-hidden">
-                    <!-- UPDATED MINIMAP IMAGE SOURCE -->
                     <img src="explore-page-site-plan.png" class="w-full h-full object-contain mix-blend-multiply" alt="Mini Key Plan" />
-                    <!-- Mini Map Pins Container -->
                     <div id="mini-map-pins" class="absolute inset-0 pointer-events-none"></div>
                 </div>
             </div>
 
-            <!-- Floating Quest / VR Button -->
+            <!-- WebXR Button -->
             <button id="vr-button" class="absolute bottom-8 right-8 bg-brand-red text-brand-vintage font-bold px-6 py-3 rounded-sm shadow-[0_10px_20px_rgba(123,46,36,0.3)] text-xs tracking-[0.15em] uppercase hover:bg-[#5C2119] transition-colors z-[100]">
                 ENTER VR
             </button>
             
-            <div class="absolute bottom-8 left-8 text-brand-vintage bg-[#1C1917]/80 backdrop-blur px-4 py-2 rounded-sm border border-white/10 text-xs tracking-wide">
+            <div class="absolute bottom-8 left-8 text-brand-vintage bg-[#1C1917]/80 backdrop-blur px-4 py-2 rounded-sm border border-white/10 text-xs tracking-wide desktop-only">
                 Drag to look &middot; Scroll to zoom
             </div>
         </section>
@@ -593,6 +586,8 @@
             { id: 9, num: "09", title: "Service Area", top: "20%", left: "49%", img: "https://images.unsplash.com/photo-1587293852726-694b630e2de3?q=80&w=400&h=150&auto=format&fit=crop", desc: "Consolidated backend logistics hub managing deliveries, waste sorting, and utilities without disrupting the pedestrian flow in the primary market zones." }
         ];
 
+        let currentLocationData = null;
+
         function initExploreSection() {
             const listContainer = document.getElementById('explore-text-list');
             const cardsContainer = document.getElementById('explore-cards-list');
@@ -600,14 +595,12 @@
             if (!listContainer || !cardsContainer) return;
 
             exploreLocations.forEach(loc => {
-                // 1. Text List Item
                 const listItem = document.createElement('div');
                 listItem.className = 'explore-list-item';
                 listItem.innerHTML = `<div class="num">${loc.num}</div><span class="text-[0.7rem] font-semibold">${loc.title}</span>`;
                 listItem.onclick = () => openLocationInViewer(loc);
                 listContainer.appendChild(listItem);
 
-                // 2. Image Card
                 const card = document.createElement('div');
                 card.className = 'explore-card group bg-white relative';
                 card.onclick = () => openLocationInViewer(loc);
@@ -623,20 +616,18 @@
                 cardsContainer.appendChild(card);
             });
 
-            // Populate Map Pins for both main explore map and viewer mini-map
             createMapPins('map-pins-container');
             createMapPins('mini-map-pins');
         }
 
-        // Helper to generate map pins for specific container
         function createMapPins(containerId) {
             const container = document.getElementById(containerId);
             if(!container) return;
             
-            container.innerHTML = ''; // clear first
+            container.innerHTML = ''; 
             exploreLocations.forEach(loc => {
                 const pin = document.createElement('div');
-                pin.className = `map-pin map-pin-${loc.id}`; // add specific class for tracking active state
+                pin.className = `map-pin map-pin-${loc.id}`; 
                 pin.style.top = loc.top;
                 pin.style.left = loc.left;
                 pin.innerText = loc.num;
@@ -647,25 +638,18 @@
         }
 
         function updateActivePins(activeId) {
-            document.querySelectorAll('.map-pin').forEach(pin => {
-                pin.classList.remove('active-pin');
-            });
-            document.querySelectorAll(`.map-pin-${activeId}`).forEach(pin => {
-                pin.classList.add('active-pin');
-            });
+            document.querySelectorAll('.map-pin').forEach(pin => pin.classList.remove('active-pin'));
+            document.querySelectorAll(`.map-pin-${activeId}`).forEach(pin => pin.classList.add('active-pin'));
         }
 
         function openLocationInViewer(loc) {
-            // Update Active Pin Visualization across all maps
+            currentLocationData = loc;
             updateActivePins(loc.id);
 
-            // Update the UI title in the Viewer Left Panel
+            // Update Desktop UI
             const viewerTitle = document.querySelector('#vr-ui-container h3');
-            if(viewerTitle) {
-                viewerTitle.innerText = `${loc.num} - 360° Studio`;
-            }
+            if(viewerTitle) viewerTitle.innerText = `${loc.num} - 360° Studio`;
 
-            // Update Right Panel Description Data
             const descNum = document.getElementById('desc-num');
             const descTitle = document.getElementById('desc-title');
             const descImg = document.getElementById('desc-img');
@@ -676,7 +660,7 @@
             if(descImg) descImg.src = loc.img;
             if(descText) descText.innerText = loc.desc;
 
-            // Generate new fallback textures with the location's name to simulate loading different zones
+            // Generate temporary 3D sphere textures
             if (siteSphere && siteSphere.material) {
                 siteSphere.material.map = createFallbackTexture('#1e293b', `${loc.title.toUpperCase()} (EXISTING)`);
                 siteSphere.material.needsUpdate = true;
@@ -685,51 +669,34 @@
                 scheme1Texture = createFallbackTexture('#0f766e', `${loc.title.toUpperCase()} (SCHEME A)`);
                 scheme2Texture = createFallbackTexture('#4338ca', `${loc.title.toUpperCase()} (SCHEME B)`);
                 
-                // Reset to Scheme A active
                 renderMaterial.map = scheme1Texture;
                 renderMaterial.needsUpdate = true;
                 
-                const btn1 = document.getElementById('btn-scheme1');
-                const btn2 = document.getElementById('btn-scheme2');
-                if(btn1 && btn2) {
-                    btn1.classList.add('active-scheme');
-                    btn2.classList.remove('active-scheme');
-                }
+                document.getElementById('btn-scheme1').classList.add('active-scheme');
+                document.getElementById('btn-scheme2').classList.remove('active-scheme');
             }
 
-            // Navigate to viewer tab
+            // Update VR Canvases if initialized
+            updateVRInfoCanvas(loc);
+            updateVRControlCanvas(1);
+
             navigate('viewer');
         }
 
-        // Initialize immediately
         initExploreSection();
 
         function navigate(targetId) {
-            // Update Navigation UI
             document.querySelectorAll('.nav-link').forEach(link => {
-                if(link.getAttribute('data-target') === targetId) {
-                    link.classList.add('active');
-                } else {
-                    link.classList.remove('active');
-                }
+                link.classList.toggle('active', link.getAttribute('data-target') === targetId);
             });
 
-            // Transition Sections
             document.querySelectorAll('.page-section').forEach(section => {
-                if(section.id === targetId) {
-                    section.classList.add('active');
-                } else {
-                    section.classList.remove('active');
-                }
+                section.classList.toggle('active', section.id === targetId);
             });
 
-            // Special handling for Viewer
             if(targetId === 'viewer') {
                 document.body.classList.add('viewer-mode');
-                // Force Three.js to recalibrate its size since it was hidden
-                if (typeof onWindowResize === 'function') {
-                    setTimeout(onWindowResize, 100); 
-                }
+                if (typeof onWindowResize === 'function') setTimeout(onWindowResize, 100); 
             } else {
                 document.body.classList.remove('viewer-mode');
             }
@@ -737,21 +704,25 @@
 
 
         // ==========================================
-        // THREE.JS VR STUDIO LOGIC
+        // THREE.JS VR STUDIO & 3D UI LOGIC
         // ==========================================
-        const SITE_IMAGE_PATH = 'site.jpg';
-        const SCHEME_1_PATH   = 'option1.jpg';
-        const SCHEME_2_PATH   = 'option2.jpg';
-
         let scene, camera, renderer;
-        let siteSphere, renderSphere;
-        let renderMaterial;
+        let siteSphere, renderSphere, renderMaterial;
         let scheme1Texture, scheme2Texture;
+        let activeSchemeVr = 1;
         
+        let vrUIGroup; 
+        let vrControlMesh, vrInfoMesh;
+        let vrControlCtx, vrInfoCtx;
+        let vrControlTex, vrInfoTex;
+
+        let controller1, controller2;
+        let raycaster;
+        let workingMatrix = new THREE.Matrix4();
+
         let isUserInteracting = false;
+        let lon = 0, lat = 0, onPointerDownLon = 0, onPointerDownLat = 0;
         let onPointerDownPointerX = 0, onPointerDownPointerY = 0;
-        let lon = 0, onPointerDownLon = 0, lat = 0, onPointerDownLat = 0;
-        let phi = 0, theta = 0;
 
         init3D();
         animate3D();
@@ -760,49 +731,34 @@
             const canvas = document.getElementById('webgl-canvas');
 
             scene = new THREE.Scene();
-
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
             camera.target = new THREE.Vector3(0, 0, 0);
 
             renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
             renderer.setPixelRatio(window.devicePixelRatio);
             renderer.setSize(window.innerWidth, window.innerHeight);
-            // Crucial: Enabling WebXR
             renderer.xr.enabled = true;
 
             const geometry = new THREE.SphereGeometry(500, 60, 40);
             geometry.scale(-1, 1, 1);
 
-            const textureLoader = new THREE.TextureLoader();
-
-            // Load Base Site
-            const siteTexture = textureLoader.load(SITE_IMAGE_PATH, undefined, undefined, () => {
-                siteSphere.material.map = createFallbackTexture('#1e293b', 'SITE PHOTO (site.jpg)');
-                siteSphere.material.needsUpdate = true;
-                document.getElementById('file-warning').style.display = 'block';
-            });
-            const siteMaterial = new THREE.MeshBasicMaterial({ map: siteTexture });
-            siteSphere = new THREE.Mesh(geometry, siteMaterial);
+            siteSphere = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ color: 0x222222 }));
             scene.add(siteSphere);
+            
+            scheme1Texture = createFallbackTexture('#0f766e', 'SCHEME A');
+            scheme2Texture = createFallbackTexture('#4338ca', 'SCHEME B');
 
-            // Preload Schemes
-            scheme1Texture = textureLoader.load(SCHEME_1_PATH, undefined, undefined, () => {
-                scheme1Texture = createFallbackTexture('#0f766e', 'SCHEME A (option1.jpg)');
-                if (renderMaterial) { renderMaterial.map = scheme1Texture; renderMaterial.needsUpdate = true; }
-            });
-
-            scheme2Texture = textureLoader.load(SCHEME_2_PATH, undefined, undefined, () => {
-                scheme2Texture = createFallbackTexture('#4338ca', 'SCHEME B (option2.jpg)');
-            });
-
-            // Overlay Sphere
             renderMaterial = new THREE.MeshBasicMaterial({ map: scheme1Texture, transparent: true, opacity: 0.5 });
             renderSphere = new THREE.Mesh(geometry, renderMaterial);
             scene.add(renderSphere);
 
-            setupUIControls();
+            // WebXR Setup
             setupWebXRButton();
+            setupVRControllers();
+            createVRUIPanels();
 
+            // Desktop Interactions
+            setupUIControls();
             window.addEventListener('resize', onWindowResize);
             canvas.addEventListener('pointerdown', onPointerDown);
             canvas.addEventListener('pointermove', onPointerMove);
@@ -810,36 +766,218 @@
             canvas.addEventListener('wheel', onDocumentMouseWheel);
         }
 
-        // Fallback Texture Generator
+        // =======================
+        // VR UI: Controllers & Canvas Textures
+        // =======================
+        function setupVRControllers() {
+            raycaster = new THREE.Raycaster();
+
+            function onSelectStart(event) {
+                const controller = event.target;
+                const intersections = getIntersections(controller);
+
+                if (intersections.length > 0) {
+                    const intersection = intersections[0];
+                    if (intersection.object === vrControlMesh) {
+                        const uv = intersection.uv;
+                        // Simple split check: Left half is Scheme A, Right half is Scheme B
+                        if (uv.x < 0.5) {
+                            activeSchemeVr = 1;
+                            renderMaterial.map = scheme1Texture;
+                            document.getElementById('btn-scheme1').click(); // sync desktop
+                        } else {
+                            activeSchemeVr = 2;
+                            renderMaterial.map = scheme2Texture;
+                            document.getElementById('btn-scheme2').click(); // sync desktop
+                        }
+                        renderMaterial.needsUpdate = true;
+                        updateVRControlCanvas(activeSchemeVr);
+                    }
+                }
+            }
+
+            const geometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, -1)]);
+            const material = new THREE.LineBasicMaterial({ color: 0xff0000 });
+            const line = new THREE.Line(geometry, material);
+            line.name = 'line';
+            line.scale.z = 5;
+
+            controller1 = renderer.xr.getController(0);
+            controller1.addEventListener('selectstart', onSelectStart);
+            controller1.add(line.clone());
+            scene.add(controller1);
+
+            controller2 = renderer.xr.getController(1);
+            controller2.addEventListener('selectstart', onSelectStart);
+            controller2.add(line.clone());
+            scene.add(controller2);
+        }
+
+        function getIntersections(controller) {
+            workingMatrix.identity().extractRotation(controller.matrixWorld);
+            raycaster.ray.origin.setFromMatrixPosition(controller.matrixWorld);
+            raycaster.ray.direction.set(0, 0, -1).applyMatrix4(workingMatrix);
+            return raycaster.intersectObjects([vrControlMesh], false);
+        }
+
+        function createVRUIPanels() {
+            vrUIGroup = new THREE.Group();
+            scene.add(vrUIGroup);
+            vrUIGroup.visible = false; // Only show in VR
+
+            // Setup Canvas Textures
+            const controlCanvas = document.createElement('canvas');
+            controlCanvas.width = 1024; controlCanvas.height = 512;
+            vrControlCtx = controlCanvas.getContext('2d');
+            vrControlTex = new THREE.CanvasTexture(controlCanvas);
+
+            const infoCanvas = document.createElement('canvas');
+            infoCanvas.width = 1024; infoCanvas.height = 1024;
+            vrInfoCtx = infoCanvas.getContext('2d');
+            vrInfoTex = new THREE.CanvasTexture(infoCanvas);
+
+            // Create Meshes
+            const controlGeo = new THREE.PlaneGeometry(1.5, 0.75);
+            const infoGeo = new THREE.PlaneGeometry(1.5, 1.5);
+            const matConfig = { transparent: true, side: THREE.DoubleSide, depthTest: false };
+
+            vrControlMesh = new THREE.Mesh(controlGeo, new THREE.MeshBasicMaterial({ map: vrControlTex, ...matConfig }));
+            vrInfoMesh = new THREE.Mesh(infoGeo, new THREE.MeshBasicMaterial({ map: vrInfoTex, ...matConfig }));
+
+            // Position relative to user head
+            vrControlMesh.position.set(-1.2, 1.2, -2);
+            vrControlMesh.rotation.y = Math.PI / 6;
+
+            vrInfoMesh.position.set(1.2, 1.2, -2);
+            vrInfoMesh.rotation.y = -Math.PI / 6;
+
+            vrUIGroup.add(vrControlMesh);
+            vrUIGroup.add(vrInfoMesh);
+
+            // Draw defaults
+            updateVRControlCanvas(1);
+            updateVRInfoCanvas({ num: '00', title: 'Poorna Market', desc: 'Select a zone from the explore tab before entering VR.' });
+        }
+
+        function updateVRControlCanvas(activeScheme) {
+            if(!vrControlCtx) return;
+            const ctx = vrControlCtx;
+            ctx.clearRect(0, 0, 1024, 512);
+
+            // Background panel
+            ctx.fillStyle = 'rgba(248, 245, 240, 0.95)';
+            ctx.fillRect(0, 0, 1024, 512);
+
+            // Border
+            ctx.strokeStyle = 'rgba(123, 46, 36, 0.5)';
+            ctx.lineWidth = 10;
+            ctx.strokeRect(5, 5, 1014, 502);
+
+            // Title
+            ctx.fillStyle = '#7B2E24';
+            ctx.font = 'bold 60px "Playfair Display", serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('DESIGN SCHEME SELECTOR', 512, 120);
+
+            ctx.font = '40px sans-serif';
+            ctx.fillStyle = '#1C1917';
+            ctx.fillText('Point controller and pull trigger to select', 512, 190);
+
+            // Button A
+            ctx.fillStyle = activeScheme === 1 ? '#7B2E24' : 'transparent';
+            ctx.fillRect(80, 250, 400, 180);
+            ctx.strokeStyle = '#7B2E24';
+            ctx.lineWidth = 6;
+            ctx.strokeRect(80, 250, 400, 180);
+            
+            ctx.fillStyle = activeScheme === 1 ? '#EFE7DB' : '#7B2E24';
+            ctx.font = 'bold 50px sans-serif';
+            ctx.fillText('SCHEME A', 280, 355);
+
+            // Button B
+            ctx.fillStyle = activeScheme === 2 ? '#7B2E24' : 'transparent';
+            ctx.fillRect(544, 250, 400, 180);
+            ctx.strokeStyle = '#7B2E24';
+            ctx.strokeRect(544, 250, 400, 180);
+
+            ctx.fillStyle = activeScheme === 2 ? '#EFE7DB' : '#7B2E24';
+            ctx.fillText('SCHEME B', 744, 355);
+
+            vrControlTex.needsUpdate = true;
+        }
+
+        function updateVRInfoCanvas(locData) {
+            if(!vrInfoCtx) return;
+            const ctx = vrInfoCtx;
+            ctx.clearRect(0, 0, 1024, 1024);
+
+            // Background panel
+            ctx.fillStyle = 'rgba(248, 245, 240, 0.95)';
+            ctx.fillRect(0, 0, 1024, 1024);
+            ctx.strokeStyle = 'rgba(123, 46, 36, 0.5)';
+            ctx.lineWidth = 10;
+            ctx.strokeRect(5, 5, 1014, 1014);
+
+            // Content
+            ctx.fillStyle = '#7B2E24';
+            ctx.font = 'bold 50px sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillText(`LOCATION ${locData.num}`, 80, 140);
+
+            ctx.font = 'bold 90px "Playfair Display", serif';
+            ctx.fillText(locData.title, 80, 250);
+
+            // Wrap Text
+            ctx.fillStyle = '#1C1917';
+            ctx.font = '45px sans-serif';
+            const words = locData.desc.split(' ');
+            let line = '';
+            let y = 360;
+            const maxWidth = 860;
+            
+            for(let n = 0; n < words.length; n++) {
+                let testLine = line + words[n] + ' ';
+                let metrics = ctx.measureText(testLine);
+                if (metrics.width > maxWidth && n > 0) {
+                    ctx.fillText(line, 80, y);
+                    line = words[n] + ' ';
+                    y += 65;
+                } else {
+                    line = testLine;
+                }
+            }
+            ctx.fillText(line, 80, y);
+
+            vrInfoTex.needsUpdate = true;
+        }
+
         function createFallbackTexture(bgColor, label) {
             const canvas = document.createElement('canvas');
             canvas.width = 2048; canvas.height = 1024;
             const ctx = canvas.getContext('2d');
             ctx.fillStyle = bgColor; ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)'; ctx.lineWidth = 4;
-            for (let x = 0; x < canvas.width; x += 128) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke(); }
-            for (let y = 0; y < canvas.height; y += 128) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke(); }
-            ctx.strokeStyle = '#00f2fe'; ctx.lineWidth = 8;
-            ctx.beginPath(); ctx.moveTo(0, canvas.height/2); ctx.lineTo(canvas.width, canvas.height/2); ctx.stroke();
             ctx.fillStyle = '#ffffff'; ctx.font = 'bold 72px sans-serif'; ctx.textAlign = 'center';
             ctx.fillText(label, canvas.width / 2, canvas.height / 2 - 20);
             return new THREE.CanvasTexture(canvas);
         }
 
+        // =======================
+        // Desktop Interactions
+        // =======================
         function setupUIControls() {
             const btn1 = document.getElementById('btn-scheme1');
             const btn2 = document.getElementById('btn-scheme2');
 
             btn1.addEventListener('click', () => {
                 renderMaterial.map = scheme1Texture; renderMaterial.needsUpdate = true;
-                btn1.classList.add('active-scheme'); 
-                btn2.classList.remove('active-scheme');
+                btn1.classList.add('active-scheme'); btn2.classList.remove('active-scheme');
+                activeSchemeVr = 1; updateVRControlCanvas(1);
             });
 
             btn2.addEventListener('click', () => {
                 renderMaterial.map = scheme2Texture; renderMaterial.needsUpdate = true;
-                btn2.classList.add('active-scheme'); 
-                btn1.classList.remove('active-scheme');
+                btn2.classList.add('active-scheme'); btn1.classList.remove('active-scheme');
+                activeSchemeVr = 2; updateVRControlCanvas(2);
             });
 
             const opacitySlider = document.getElementById('opacity-slider');
@@ -868,38 +1006,40 @@
 
         function setupWebXRButton() {
             const vrButton = document.getElementById('vr-button');
+            const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            const isHttps = window.location.protocol === 'https:';
+
             if ('xr' in navigator) {
+                if (!isHttps && !isLocalhost) {
+                    vrButton.textContent = 'HTTPS REQUIRED FOR VR';
+                    vrButton.title = 'Please host via GitHub Pages (HTTPS) to use VR.';
+                    return;
+                }
+
                 navigator.xr.isSessionSupported('immersive-vr').then((supported) => {
                     if (supported) {
                         vrButton.textContent = 'ENTER VR';
-                        vrButton.disabled = false;
                         vrButton.addEventListener('click', () => {
                             navigator.xr.requestSession('immersive-vr', { optionalFeatures: ['local-floor'] })
                             .then((session) => { 
                                 renderer.xr.setSession(session); 
-                                vrButton.style.display = 'none'; 
                                 
-                                // Show button again when exiting VR
                                 session.addEventListener('end', () => {
-                                    vrButton.style.display = 'block';
+                                    document.querySelectorAll('.desktop-only').forEach(el => el.style.display = 'block');
                                 });
                             });
                         });
                     } else { 
-                        vrButton.textContent = 'VR HEADSET NOT FOUND'; 
-                        vrButton.disabled = true; 
-                        vrButton.title = 'Please connect a VR headset (like a Meta Quest) to use this feature.';
+                        vrButton.textContent = 'NO VR HEADSET DETECTED'; 
+                        vrButton.title = 'Connect a Meta Quest or compatible WebXR device.';
                     }
                 });
             } else { 
-                vrButton.textContent = 'HTTPS REQUIRED FOR VR'; 
-                vrButton.disabled = true; 
-                vrButton.title = 'WebXR requires a secure HTTPS connection or localhost environment.';
+                vrButton.textContent = 'BROWSER DOES NOT SUPPORT WEBXR'; 
             }
         }
 
         function onPointerDown(event) {
-            // Only interact if we are on the viewer tab
             if(!document.getElementById('viewer').classList.contains('active')) return;
             isUserInteracting = true;
             onPointerDownPointerX = event.clientX; onPointerDownPointerY = event.clientY;
@@ -933,19 +1073,26 @@
         }
 
         function render() {
-            // Only update camera if viewer is active, saves performance
             if(document.getElementById('viewer').classList.contains('active')) {
-                if (!renderer.xr.isPresenting) {
+                
+                // Toggle VR UI visibility based on session state
+                if (renderer.xr.isPresenting) {
+                    vrUIGroup.visible = true;
+                    document.querySelectorAll('.desktop-only').forEach(el => el.style.display = 'none');
+                } else {
+                    vrUIGroup.visible = false;
+                    
+                    // Desktop Camera Controls
                     lat = Math.max(-85, Math.min(85, lat));
-                    phi = THREE.MathUtils.degToRad(90 - lat);
-                    theta = THREE.MathUtils.degToRad(lon);
+                    const phi = THREE.MathUtils.degToRad(90 - lat);
+                    const theta = THREE.MathUtils.degToRad(lon);
 
                     camera.target.x = 500 * Math.sin(phi) * Math.cos(theta);
                     camera.target.y = 500 * Math.cos(phi);
                     camera.target.z = 500 * Math.sin(phi) * Math.sin(theta);
-
                     camera.lookAt(camera.target);
                 }
+
                 renderer.render(scene, camera);
             }
         }
