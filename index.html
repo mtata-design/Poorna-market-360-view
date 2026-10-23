@@ -370,6 +370,10 @@
         let vrControlCtx, vrInfoCtx, vrMapCtx;
         let vrControlTex, vrInfoTex, vrMapTex;
         
+        let vrCursor;
+        let hoveredVRButton = null;
+        let hoveredVRMapPin = null;
+
         let activeSchemeVr = 1;
         let currentOpacityVr = 0.5;
         let currentYawVr = 0;
@@ -410,6 +414,13 @@
             scheme2Texture = createFallbackTexture('#4338ca', 'SCHEME B');
             renderMaterial = new THREE.MeshBasicMaterial({ map: scheme1Texture, transparent: true, opacity: 0.5 });
             renderSphere = new THREE.Mesh(geometry, renderMaterial); scene.add(renderSphere);
+
+            const cursorGeo = new THREE.RingGeometry(0.015, 0.03, 32);
+            const cursorMat = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide, depthTest: false, transparent: true, opacity: 0.8 });
+            vrCursor = new THREE.Mesh(cursorGeo, cursorMat);
+            vrCursor.renderOrder = 999;
+            scene.add(vrCursor);
+            vrCursor.visible = false;
 
             setupWebXRButton();
             createVRUIPanels();
@@ -466,18 +477,25 @@
             ctx.fillText("1. SELECT SCHEME", 50, 200);
             ctx.lineWidth = 4; ctx.strokeStyle = '#7B2E24';
             
-            ctx.fillStyle = activeSchemeVr === 1 ? '#7B2E24' : 'transparent'; ctx.fillRect(50, 250, 330, 100); ctx.strokeRect(50, 250, 330, 100);
+            ctx.fillStyle = activeSchemeVr === 1 ? '#7B2E24' : (hoveredVRButton === 'scheme1' ? 'rgba(123, 46, 36, 0.2)' : 'transparent'); 
+            ctx.fillRect(50, 250, 330, 100); ctx.strokeRect(50, 250, 330, 100);
             ctx.fillStyle = activeSchemeVr === 1 ? '#EFE7DB' : '#7B2E24'; ctx.textAlign = 'center'; ctx.fillText("SCHEME A", 215, 310);
             
-            ctx.fillStyle = activeSchemeVr === 2 ? '#7B2E24' : 'transparent'; ctx.fillRect(420, 250, 330, 100); ctx.strokeRect(420, 250, 330, 100);
+            ctx.fillStyle = activeSchemeVr === 2 ? '#7B2E24' : (hoveredVRButton === 'scheme2' ? 'rgba(123, 46, 36, 0.2)' : 'transparent'); 
+            ctx.fillRect(420, 250, 330, 100); ctx.strokeRect(420, 250, 330, 100);
             ctx.fillStyle = activeSchemeVr === 2 ? '#EFE7DB' : '#7B2E24'; ctx.fillText("SCHEME B", 585, 310);
 
             ctx.textAlign = 'left'; ctx.fillStyle = '#1C1917'; ctx.fillText(`2. AR BLEND: ${Math.round(currentOpacityVr*100)}%`, 50, 480);
             ctx.fillStyle = 'rgba(123, 46, 36, 0.2)'; ctx.fillRect(50, 530, 700, 10);
             ctx.fillStyle = '#7B2E24'; ctx.beginPath(); ctx.arc(50 + currentOpacityVr*700, 535, 20, 0, Math.PI*2); ctx.fill();
 
-            ctx.fillStyle = 'transparent'; ctx.strokeRect(50, 620, 330, 80); ctx.strokeRect(420, 620, 330, 80);
-            ctx.fillStyle = '#7B2E24'; ctx.textAlign = 'center'; ctx.fillText("SITE ONLY", 215, 670); ctx.fillText("DESIGN ONLY", 585, 670);
+            ctx.fillStyle = currentOpacityVr === 0 ? 'rgba(123,46,36,0.2)' : (hoveredVRButton === 'presetSite' ? 'rgba(123, 46, 36, 0.1)' : 'transparent'); 
+            ctx.fillRect(50, 620, 330, 80); ctx.strokeRect(50, 620, 330, 80);
+            ctx.fillStyle = '#7B2E24'; ctx.textAlign = 'center'; ctx.fillText("SITE ONLY", 215, 670); 
+            
+            ctx.fillStyle = currentOpacityVr === 1 ? 'rgba(123,46,36,0.2)' : (hoveredVRButton === 'presetRender' ? 'rgba(123, 46, 36, 0.1)' : 'transparent');
+            ctx.fillRect(420, 620, 330, 80); ctx.strokeRect(420, 620, 330, 80);
+            ctx.fillStyle = '#7B2E24'; ctx.fillText("DESIGN ONLY", 585, 670);
 
             ctx.textAlign = 'left'; ctx.fillStyle = '#1C1917'; ctx.fillText(`3. YAW: ${Math.round(currentYawVr)}°`, 50, 840);
             ctx.fillStyle = 'rgba(123, 46, 36, 0.2)'; ctx.fillRect(50, 890, 700, 10);
@@ -485,7 +503,7 @@
             ctx.fillStyle = '#7B2E24'; ctx.beginPath(); ctx.arc(50 + yawPercent*700, 895, 20, 0, Math.PI*2); ctx.fill();
 
             // Exit VR Button
-            ctx.fillStyle = '#7B2E24'; ctx.fillRect(50, 1020, 700, 100);
+            ctx.fillStyle = hoveredVRButton === 'exit' ? '#5C2119' : '#7B2E24'; ctx.fillRect(50, 1020, 700, 100);
             ctx.fillStyle = '#EFE7DB'; ctx.textAlign = 'center'; ctx.font = 'bold 35px sans-serif'; 
             ctx.fillText("EXIT VR (GO BACK)", 400, 1080);
 
@@ -524,8 +542,17 @@
             exploreLocations.forEach(loc => {
                 const px = 50 + (parseFloat(loc.left)/100) * 700;
                 const py = 120 + (parseFloat(loc.top)/100) * 430;
-                ctx.fillStyle = (currentLocationData.id === loc.id) ? '#5C2119' : '#7B2E24';
-                ctx.beginPath(); ctx.arc(px, py, 18, 0, Math.PI*2); ctx.fill();
+                
+                const isHovered = (hoveredVRMapPin === loc.id);
+                const radius = isHovered ? 24 : 18;
+
+                ctx.fillStyle = (currentLocationData.id === loc.id) ? '#5C2119' : (isHovered ? '#a34839' : '#7B2E24');
+                ctx.beginPath(); ctx.arc(px, py, radius, 0, Math.PI*2); ctx.fill();
+                
+                if (isHovered) {
+                    ctx.strokeStyle = '#EFE7DB'; ctx.lineWidth = 3; ctx.stroke();
+                }
+
                 ctx.fillStyle = '#EFE7DB'; ctx.font = 'bold 16px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(loc.num, px, py+6);
             });
             vrMapTex.needsUpdate = true;
@@ -674,12 +701,81 @@
             }
         }
 
+        function handleVRIntersections() {
+            if (!renderer || !renderer.xr.isPresenting || !vrUIGroup || !vrUIGroup.visible) {
+                if(vrCursor && vrCursor.visible) vrCursor.visible = false;
+                return;
+            }
+            
+            let currentHoverBtn = null;
+            let currentHoverPin = null;
+            let hitFound = false;
+
+            const controllers = [controller1, controller2].filter(c => c);
+
+            for (let c of controllers) {
+                workingMatrix.identity().extractRotation(c.matrixWorld);
+                raycaster.ray.origin.setFromMatrixPosition(c.matrixWorld);
+                raycaster.ray.direction.set(0,0,-1).applyMatrix4(workingMatrix);
+
+                let hits = raycaster.intersectObjects([vrControlMesh, vrMapMesh]);
+                if (hits.length > 0) {
+                    const hit = hits[0];
+                    vrCursor.position.copy(hit.point);
+                    vrCursor.position.add(raycaster.ray.direction.clone().multiplyScalar(-0.02)); 
+                    vrCursor.lookAt(camera.position);
+                    vrCursor.visible = true;
+                    hitFound = true;
+
+                    const uv = hit.uv;
+                    
+                    if (hit.object === vrControlMesh) {
+                        const cx = uv.x * 800; const cy = (1 - uv.y) * 1200;
+                        if(cy >= 250 && cy <= 350) {
+                            if(cx >= 50 && cx <= 380) currentHoverBtn = 'scheme1';
+                            if(cx >= 420 && cx <= 750) currentHoverBtn = 'scheme2';
+                        }
+                        else if(cy >= 620 && cy <= 700) {
+                            if(cx >= 50 && cx <= 380) currentHoverBtn = 'presetSite';
+                            if(cx >= 420 && cx <= 750) currentHoverBtn = 'presetRender';
+                        }
+                        else if(cy >= 1020 && cy <= 1120 && cx >= 50 && cx <= 750) {
+                            currentHoverBtn = 'exit';
+                        }
+                    } else if (hit.object === vrMapMesh) {
+                        const cx = uv.x * 800; const cy = (1 - uv.y) * 600;
+                        if(cx >= 50 && cx <= 750 && cy >= 120 && cy <= 550) {
+                            let minDist = 9999;
+                            exploreLocations.forEach(loc => {
+                                const px = 50 + (parseFloat(loc.left)/100) * 700; const py = 120 + (parseFloat(loc.top)/100) * 430;
+                                const dist = Math.hypot(px - cx, py - cy);
+                                if(dist < minDist && dist < 40) { minDist = dist; currentHoverPin = loc.id; }
+                            });
+                        }
+                    }
+                    break; 
+                }
+            }
+
+            if (!hitFound && vrCursor) vrCursor.visible = false;
+
+            if (hoveredVRButton !== currentHoverBtn) {
+                hoveredVRButton = currentHoverBtn;
+                updateVRControlCanvas();
+            }
+            if (hoveredVRMapPin !== currentHoverPin) {
+                hoveredVRMapPin = currentHoverPin;
+                updateVRMapCanvas();
+            }
+        }
+
         function animate3D() { renderer.setAnimationLoop(render); }
         function render() {
             if(document.body.classList.contains('viewer-mode')) {
                 if (renderer.xr.isPresenting) {
                     if(vrUIGroup) vrUIGroup.visible = true;
                     document.querySelectorAll('.desktop-only').forEach(el => el.style.display = 'none');
+                    handleVRIntersections();
                 } else {
                     if(vrUIGroup) vrUIGroup.visible = false;
                     lat = Math.max(-85, Math.min(85, lat));
