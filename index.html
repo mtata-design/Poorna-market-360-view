@@ -267,6 +267,16 @@
         ];
 
         let currentLocationData = exploreLocations[0];
+        
+        // Transition State Variables
+        let transitionPhase = 'idle'; // 'idle', 'fadeOut', 'fadeIn'
+        let transitionProgress = 0;
+        let pendingLocation = null;
+        let transitionMesh;
+
+        // VR Dragging State
+        let activeDragController = null;
+        let activeDragType = null;
 
         // --- SPA LOGIC ---
         function initExploreSection() {
@@ -279,10 +289,10 @@
                 exploreLocations.forEach(loc => {
                     const listItem = document.createElement('div'); listItem.className = 'explore-list-item';
                     listItem.innerHTML = `<div class="num">${loc.num}</div><span class="text-[0.7rem] font-semibold">${loc.title}</span>`;
-                    listItem.onclick = () => openLocationInViewer(loc); listContainer.appendChild(listItem);
+                    listItem.onclick = () => initiateLocationSwap(loc); listContainer.appendChild(listItem);
 
                     const card = document.createElement('div'); card.className = 'explore-card group bg-white relative';
-                    card.onclick = () => openLocationInViewer(loc);
+                    card.onclick = () => initiateLocationSwap(loc);
                     card.innerHTML = `<div class="relative w-full h-20 overflow-hidden mb-2"><img src="${loc.img}" class="w-full h-full object-cover" onerror="this.src='explore-page-site-plan.png'"></div>
                                       <div class="flex items-center gap-3 px-2 pb-1"><div class="w-5 h-5 rounded-full bg-brand-red text-white flex items-center justify-center text-[0.55rem] font-bold">${loc.num}</div><span class="text-[0.65rem] font-semibold">${loc.title}</span></div>`;
                     cardsContainer.appendChild(card);
@@ -301,11 +311,18 @@
                 const pin = document.createElement('div');
                 pin.className = `map-pin map-pin-${loc.id}`; 
                 pin.style.top = loc.top; pin.style.left = loc.left; pin.innerText = loc.num;
-                pin.onclick = () => openLocationInViewer(loc); container.appendChild(pin);
+                pin.onclick = () => initiateLocationSwap(loc); container.appendChild(pin);
             });
         }
 
-        function openLocationInViewer(loc) {
+        function initiateLocationSwap(loc) {
+            if (transitionPhase !== 'idle') return; // Prevent clicking multiple times during transition
+            pendingLocation = loc;
+            transitionPhase = 'fadeOut';
+            navigate('viewer'); // Ensure viewer is open
+        }
+
+        function executeLocationSwap(loc) {
             try {
                 currentLocationData = loc;
                 document.querySelectorAll('.map-pin').forEach(pin => pin.classList.remove('active-pin'));
@@ -348,7 +365,6 @@
                     updateVRInfoCanvas(loc);
                     updateVRMapCanvas();
                 }
-                navigate('viewer');
             } catch (err) {
                 console.error("Error opening location:", err);
             }
@@ -423,6 +439,14 @@
             renderSphere.renderOrder = 1;
             scene.add(renderSphere);
 
+            // Cinematic Transition Fade Mesh
+            transitionMesh = new THREE.Mesh(
+                new THREE.SphereGeometry(450, 32, 32),
+                new THREE.MeshBasicMaterial({ color: 0x000000, side: THREE.BackSide, transparent: true, opacity: 0, depthWrite: false })
+            );
+            transitionMesh.renderOrder = 2; // Renders over spheres, but below UI
+            scene.add(transitionMesh);
+
             // Cursor for VR Interactions
             const cursorGeo = new THREE.RingGeometry(0.015, 0.03, 32);
             const cursorMat = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide, transparent: true, opacity: 0.8, depthTest: true, depthWrite: false });
@@ -435,6 +459,9 @@
             createVRUIPanels();
             setupVRControllers();
             setupDesktopUIControls();
+
+            // Initial load execution
+            executeLocationSwap(currentLocationData);
 
             window.addEventListener('resize', onWindowResize);
             canvas.addEventListener('pointerdown', onPointerDown); 
@@ -451,7 +478,6 @@
             const info = canvasConfig(800, 1000); vrInfoCtx = info.ctx; vrInfoTex = info.tex;
             const map = canvasConfig(800, 600); vrMapCtx = map.ctx; vrMapTex = map.tex;
 
-            // FIX: Removed depthTest: false and changed to depthWrite: false, and added renderOrders
             const matConfig = { transparent: true, side: THREE.DoubleSide, depthTest: true, depthWrite: false };
             vrControlMesh = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 1.8), new THREE.MeshBasicMaterial({ map: vrControlTex, ...matConfig }));
             vrInfoMesh = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 1.5), new THREE.MeshBasicMaterial({ map: vrInfoTex, ...matConfig }));
@@ -500,7 +526,7 @@
 
             ctx.textAlign = 'left'; ctx.fillStyle = '#1C1917'; ctx.fillText(`2. AR BLEND: ${Math.round(currentOpacityVr*100)}%`, 50, 480);
             ctx.fillStyle = 'rgba(123, 46, 36, 0.2)'; ctx.fillRect(50, 530, 700, 10);
-            ctx.fillStyle = (hoveredVRButton === 'opacity' || hoveredVRButton === 'presetSite' || hoveredVRButton === 'presetRender') ? '#a34839' : '#7B2E24'; 
+            ctx.fillStyle = (hoveredVRButton === 'opacity' || activeDragType === 'opacity') ? '#a34839' : '#7B2E24'; 
             ctx.beginPath(); ctx.arc(50 + currentOpacityVr*700, 535, 24, 0, Math.PI*2); ctx.fill();
 
             ctx.fillStyle = currentOpacityVr === 0 ? 'rgba(123,46,36,0.2)' : (hoveredVRButton === 'presetSite' ? 'rgba(123, 46, 36, 0.1)' : 'transparent'); 
@@ -514,7 +540,7 @@
             ctx.textAlign = 'left'; ctx.fillStyle = '#1C1917'; ctx.fillText(`3. YAW: ${Math.round(currentYawVr)}°`, 50, 840);
             ctx.fillStyle = 'rgba(123, 46, 36, 0.2)'; ctx.fillRect(50, 890, 700, 10);
             const yawPercent = (currentYawVr + 180) / 360;
-            ctx.fillStyle = (hoveredVRButton === 'yaw') ? '#a34839' : '#7B2E24'; 
+            ctx.fillStyle = (hoveredVRButton === 'yaw' || activeDragType === 'yaw') ? '#a34839' : '#7B2E24'; 
             ctx.beginPath(); ctx.arc(50 + yawPercent*700, 895, 24, 0, Math.PI*2); ctx.fill();
 
             ctx.fillStyle = hoveredVRButton === 'exit' ? '#5C2119' : '#7B2E24'; ctx.fillRect(50, 1020, 700, 100);
@@ -587,6 +613,31 @@
             const geometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,-1)]);
             const material = new THREE.LineBasicMaterial({ color: 0xff0000 });
 
+            function onSelectStart(e) {
+                if(!vrUIGroup || !vrUIGroup.visible) return; 
+                workingMatrix.identity().extractRotation(e.target.matrixWorld);
+                raycaster.ray.origin.setFromMatrixPosition(e.target.matrixWorld);
+                raycaster.ray.direction.set(0,0,-1).applyMatrix4(workingMatrix);
+
+                let hits = raycaster.intersectObject(vrControlMesh);
+                if (hits.length > 0) {
+                    const cx = hits[0].uv.x * 800; const cy = (1 - hits[0].uv.y) * 1200;
+                    if(cy >= 500 && cy <= 580 && cx >= 50 && cx <= 750) { 
+                        activeDragController = e.target; activeDragType = 'opacity';
+                    }
+                    else if(cy >= 860 && cy <= 940 && cx >= 50 && cx <= 750) { 
+                        activeDragController = e.target; activeDragType = 'yaw';
+                    }
+                }
+            }
+
+            function onSelectEnd(e) {
+                if (activeDragController === e.target) {
+                    activeDragController = null;
+                    activeDragType = null;
+                }
+            }
+
             function onSelect(e) {
                 if(!vrUIGroup || !vrUIGroup.visible) return; 
 
@@ -609,12 +660,6 @@
                             if(cx >= 50 && cx <= 380) { currentOpacityVr = 0; syncControlState(); } 
                             if(cx >= 420 && cx <= 750) { currentOpacityVr = 1; syncControlState(); } 
                         }
-                        if(cy >= 500 && cy <= 580 && cx >= 50 && cx <= 750) { 
-                            currentOpacityVr = Math.max(0, Math.min(1, (cx - 50) / 700)); syncControlState();
-                        }
-                        if(cy >= 860 && cy <= 940 && cx >= 50 && cx <= 750) { 
-                            currentYawVr = ((cx - 50) / 700) * 360 - 180; syncControlState();
-                        }
                         if(cy >= 1020 && cy <= 1120 && cx >= 50 && cx <= 750) { 
                             const session = renderer.xr.getSession();
                             if (session) session.end();
@@ -628,7 +673,7 @@
                                 const dist = Math.hypot(px - cx, py - cy);
                                 if(dist < minDist && dist < 40) { minDist = dist; closest = loc; }
                             });
-                            if(closest) openLocationInViewer(closest);
+                            if(closest) initiateLocationSwap(closest);
                         }
                     }
                 }
@@ -636,11 +681,15 @@
 
             try {
                 controller1 = renderer.xr.getController(0); 
+                controller1.addEventListener('selectstart', onSelectStart);
+                controller1.addEventListener('selectend', onSelectEnd);
                 controller1.addEventListener('select', onSelect); 
                 controller1.add(new THREE.Line(geometry, material).clone()); 
                 scene.add(controller1);
 
                 controller2 = renderer.xr.getController(1); 
+                controller2.addEventListener('selectstart', onSelectStart);
+                controller2.addEventListener('selectend', onSelectEnd);
                 controller2.addEventListener('select', onSelect); 
                 controller2.add(new THREE.Line(geometry, material).clone()); 
                 scene.add(controller2);
@@ -725,6 +774,21 @@
                 return;
             }
             
+            // Continuous Drag Handling for Sliders
+            if (activeDragController) {
+                workingMatrix.identity().extractRotation(activeDragController.matrixWorld);
+                raycaster.ray.origin.setFromMatrixPosition(activeDragController.matrixWorld);
+                raycaster.ray.direction.set(0,0,-1).applyMatrix4(workingMatrix);
+                let dragHits = raycaster.intersectObject(vrControlMesh);
+                if (dragHits.length > 0) {
+                    const cx = dragHits[0].uv.x * 800;
+                    let val = Math.max(0, Math.min(1, (cx - 50) / 700));
+                    if (activeDragType === 'opacity') { currentOpacityVr = val; }
+                    else if (activeDragType === 'yaw') { currentYawVr = val * 360 - 180; }
+                    syncControlState();
+                }
+            }
+
             let currentHoverBtn = null;
             let currentHoverPin = null;
             let hitFound = false;
@@ -788,8 +852,30 @@
         }
 
         function animate3D() { renderer.setAnimationLoop(render); }
+        
         function render() {
             if(document.body.classList.contains('viewer-mode')) {
+                // Cinematic Fade Transition Logic
+                if (transitionPhase === 'fadeOut') {
+                    transitionProgress += 0.05; // Fade duration
+                    if (transitionProgress >= 1) {
+                        transitionProgress = 1;
+                        if (pendingLocation) {
+                            executeLocationSwap(pendingLocation);
+                            pendingLocation = null;
+                        }
+                        transitionPhase = 'fadeIn';
+                    }
+                    if (transitionMesh) transitionMesh.material.opacity = transitionProgress;
+                } else if (transitionPhase === 'fadeIn') {
+                    transitionProgress -= 0.05;
+                    if (transitionProgress <= 0) {
+                        transitionProgress = 0;
+                        transitionPhase = 'idle';
+                    }
+                    if (transitionMesh) transitionMesh.material.opacity = transitionProgress;
+                }
+
                 if (renderer.xr.isPresenting) {
                     if(vrUIGroup) vrUIGroup.visible = true;
                     document.querySelectorAll('.desktop-only').forEach(el => el.style.display = 'none');
