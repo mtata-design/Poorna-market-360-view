@@ -243,6 +243,16 @@
     </main>
 
     <script>
+        // --- VR IMAGE LOADER ---
+        const vrSiteImage = new Image();
+        let vrImageLoaded = false;
+        vrSiteImage.onload = () => {
+            vrImageLoaded = true;
+            if(typeof updateVRInfoCanvas === 'function') updateVRInfoCanvas(currentLocationData);
+            if(typeof updateVRMapCanvas === 'function') updateVRMapCanvas();
+        };
+        vrSiteImage.src = 'explore-page-site-plan.png'; // Load the image for VR canvases
+
         // --- DATA ---
         const exploreLocations = [
             { id: 1, num: "01", title: "Main Entrance", top: "75%", left: "55%", img: "explore-page-site-plan.png", desc: "The grand gateway to Poorna Market, redesigned to welcome pedestrians." },
@@ -311,11 +321,8 @@
                 if(descText) descText.innerText = loc.desc;
                 if(descImg) descImg.src = loc.img; 
 
-                // Load appropriate textures based on selection
                 if (typeof siteSphere !== 'undefined' && siteSphere && renderMaterial) {
                     const tLoader = new THREE.TextureLoader();
-                    
-                    // Default Fallbacks
                     let tempSiteTex = createFallbackTexture('#1e293b', `${loc.title.toUpperCase()} (EXISTING)`);
                     let tempOpt1Tex = createFallbackTexture('#0f766e', `${loc.title.toUpperCase()} (SCHEME A)`);
                     let tempOpt2Tex = createFallbackTexture('#4338ca', `${loc.title.toUpperCase()} (SCHEME B)`);
@@ -324,7 +331,6 @@
                     scheme1Texture = tempOpt1Tex;
                     scheme2Texture = tempOpt2Tex;
 
-                    // Try to load actual images requested by the user
                     tLoader.load('site.jpg', (tex) => { siteSphere.material.map = tex; siteSphere.material.needsUpdate = true; });
                     tLoader.load('option1.jpg', (tex) => { 
                         scheme1Texture = tex; 
@@ -357,14 +363,12 @@
             }
         }
         
-        // Initialize basic UI immediately
         initExploreSection();
 
         // --- THREE.JS VR STUDIO LOGIC ---
         let scene, camera, renderer;
         let siteSphere, renderSphere, renderMaterial, scheme1Texture, scheme2Texture;
         
-        // VR State & Canvas Elements
         let vrUIGroup; 
         let vrControlMesh, vrInfoMesh, vrMapMesh;
         let vrControlCtx, vrInfoCtx, vrMapCtx;
@@ -383,7 +387,6 @@
         let isUserInteracting = false; 
         let lon = 0, lat = 0, onPointerDownLon = 0, onPointerDownLat = 0, onPointerDownPointerX = 0, onPointerDownPointerY = 0;
 
-        // Try initializing WebGL (safeguard in case ThreeJS fails to load)
         try {
             if (typeof THREE !== 'undefined') {
                 init3D();
@@ -434,7 +437,6 @@
             canvas.addEventListener('wheel', onDocumentMouseWheel);
         }
 
-        // --- VR UI CANVAS CREATION & DRAWING ---
         function createVRUIPanels() {
             vrUIGroup = new THREE.Group(); scene.add(vrUIGroup); vrUIGroup.visible = false;
 
@@ -502,7 +504,6 @@
             const yawPercent = (currentYawVr + 180) / 360;
             ctx.fillStyle = '#7B2E24'; ctx.beginPath(); ctx.arc(50 + yawPercent*700, 895, 20, 0, Math.PI*2); ctx.fill();
 
-            // Exit VR Button
             ctx.fillStyle = hoveredVRButton === 'exit' ? '#5C2119' : '#7B2E24'; ctx.fillRect(50, 1020, 700, 100);
             ctx.fillStyle = '#EFE7DB'; ctx.textAlign = 'center'; ctx.font = 'bold 35px sans-serif'; 
             ctx.fillText("EXIT VR (GO BACK)", 400, 1080);
@@ -518,8 +519,14 @@
             ctx.fillStyle = '#7B2E24'; ctx.font = 'bold 35px sans-serif'; ctx.textAlign = 'left'; ctx.fillText(`LOCATION ${loc.num}`, 50, 100);
             ctx.font = 'bold 70px "Playfair Display", serif'; ctx.fillText(loc.title, 50, 180);
 
-            ctx.fillStyle = '#EFE7DB'; ctx.fillRect(50, 220, 700, 300);
-            ctx.fillStyle = '#7B2E24'; ctx.font = '30px sans-serif'; ctx.textAlign = 'center'; ctx.fillText("[ View Desktop For Image ]", 400, 370);
+            // Draw Site Plan Image or Fallback
+            if (vrImageLoaded) {
+                ctx.drawImage(vrSiteImage, 50, 220, 700, 300);
+                ctx.strokeStyle = 'rgba(123, 46, 36, 0.2)'; ctx.lineWidth = 4; ctx.strokeRect(50, 220, 700, 300);
+            } else {
+                ctx.fillStyle = '#EFE7DB'; ctx.fillRect(50, 220, 700, 300);
+                ctx.fillStyle = '#7B2E24'; ctx.font = '30px sans-serif'; ctx.textAlign = 'center'; ctx.fillText("[ Loading Map Image... ]", 400, 370);
+            }
 
             ctx.fillStyle = '#1C1917'; ctx.textAlign = 'left'; ctx.font = '35px sans-serif';
             const words = loc.desc.split(' '); let line = ''; let y = 600;
@@ -537,7 +544,12 @@
             const ctx = vrMapCtx; ctx.clearRect(0,0,800,600);
             drawVintagePanel(ctx, 800, 600, "Navigation Map");
 
-            ctx.fillStyle = '#ffffff'; ctx.fillRect(50, 120, 700, 430);
+            // Draw Site Plan Image or Fallback
+            if (vrImageLoaded) {
+                ctx.drawImage(vrSiteImage, 50, 120, 700, 430);
+            } else {
+                ctx.fillStyle = '#ffffff'; ctx.fillRect(50, 120, 700, 430);
+            }
             
             exploreLocations.forEach(loc => {
                 const px = 50 + (parseFloat(loc.left)/100) * 700;
@@ -558,7 +570,6 @@
             vrMapTex.needsUpdate = true;
         }
 
-        // --- VR CONTROLLER INTERACTIONS ---
         function setupVRControllers() {
             raycaster = new THREE.Raycaster();
             const geometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,-1)]);
@@ -589,7 +600,6 @@
                     if(cy >= 860 && cy <= 940 && cx >= 50 && cx <= 750) { 
                         currentYawVr = ((cx - 50) / 700) * 360 - 180; syncControlState();
                     }
-                    // Exit VR Interaction
                     if(cy >= 1020 && cy <= 1120 && cx >= 50 && cx <= 750) { 
                         const session = renderer.xr.getSession();
                         if (session) session.end();
@@ -626,7 +636,6 @@
             }
         }
 
-        // --- SYNC DESKTOP <-> VR ---
         function syncControlState() {
             if(renderMaterial) {
                 renderMaterial.map = activeSchemeVr === 1 ? scheme1Texture : scheme2Texture;
@@ -657,7 +666,6 @@
             if(get('yaw-slider')) get('yaw-slider').oninput = (e) => { currentYawVr = parseFloat(e.target.value); syncControlState(); };
         }
 
-        // --- UTILS ---
         function setupWebXRButton() {
             const btn = document.getElementById('vr-button');
             if(!btn) return;
