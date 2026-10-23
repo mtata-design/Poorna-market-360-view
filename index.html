@@ -248,10 +248,10 @@
         let vrImageLoaded = false;
         vrSiteImage.onload = () => {
             vrImageLoaded = true;
-            if(typeof updateVRInfoCanvas === 'function') updateVRInfoCanvas(currentLocationData);
-            if(typeof updateVRMapCanvas === 'function') updateVRMapCanvas();
+            if(typeof updateVRInfoCanvas === 'function' && vrInfoCtx) updateVRInfoCanvas(currentLocationData);
+            if(typeof updateVRMapCanvas === 'function' && vrMapCtx) updateVRMapCanvas();
         };
-        vrSiteImage.src = 'explore-page-site-plan.png'; // Load the image for VR canvases
+        vrSiteImage.src = 'explore-page-site-plan.png';
 
         // --- DATA ---
         const exploreLocations = [
@@ -331,15 +331,15 @@
                     scheme1Texture = tempOpt1Tex;
                     scheme2Texture = tempOpt2Tex;
 
-                    tLoader.load('site.jpg', (tex) => { siteSphere.material.map = tex; siteSphere.material.needsUpdate = true; });
+                    tLoader.load('site.jpg', (tex) => { siteSphere.material.map = tex; siteSphere.material.needsUpdate = true; }, undefined, () => {});
                     tLoader.load('option1.jpg', (tex) => { 
                         scheme1Texture = tex; 
                         if(activeSchemeVr === 1) { renderMaterial.map = scheme1Texture; renderMaterial.needsUpdate = true; }
-                    });
+                    }, undefined, () => {});
                     tLoader.load('option2.jpg', (tex) => { 
                         scheme2Texture = tex; 
                         if(activeSchemeVr === 2) { renderMaterial.map = scheme2Texture; renderMaterial.needsUpdate = true; }
-                    });
+                    }, undefined, () => {});
                     
                     renderMaterial.map = activeSchemeVr === 1 ? scheme1Texture : scheme2Texture;
                 }
@@ -392,10 +392,10 @@
                 init3D();
                 animate3D();
             } else {
-                console.warn("Three.js not loaded. VR/3D functionality disabled.");
+                console.warn("Three.js not loaded.");
             }
         } catch (err) {
-            console.error("Error initializing 3D environment:", err);
+            console.error("Error initializing 3D:", err);
         }
 
         function init3D() {
@@ -412,16 +412,22 @@
             renderer.xr.enabled = true;
 
             const geometry = new THREE.SphereGeometry(500, 60, 40); geometry.scale(-1, 1, 1);
-            siteSphere = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ color: 0x222222 })); scene.add(siteSphere);
+            siteSphere = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ color: 0x222222 })); 
+            siteSphere.renderOrder = 0;
+            scene.add(siteSphere);
+            
             scheme1Texture = createFallbackTexture('#0f766e', 'SCHEME A'); 
             scheme2Texture = createFallbackTexture('#4338ca', 'SCHEME B');
             renderMaterial = new THREE.MeshBasicMaterial({ map: scheme1Texture, transparent: true, opacity: 0.5 });
-            renderSphere = new THREE.Mesh(geometry, renderMaterial); scene.add(renderSphere);
+            renderSphere = new THREE.Mesh(geometry, renderMaterial); 
+            renderSphere.renderOrder = 1;
+            scene.add(renderSphere);
 
+            // Cursor for VR Interactions
             const cursorGeo = new THREE.RingGeometry(0.015, 0.03, 32);
-            const cursorMat = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide, depthTest: false, transparent: true, opacity: 0.8 });
+            const cursorMat = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide, transparent: true, opacity: 0.8, depthTest: true, depthWrite: false });
             vrCursor = new THREE.Mesh(cursorGeo, cursorMat);
-            vrCursor.renderOrder = 999;
+            vrCursor.renderOrder = 20; // Ensure cursor renders above everything
             scene.add(vrCursor);
             vrCursor.visible = false;
 
@@ -445,10 +451,15 @@
             const info = canvasConfig(800, 1000); vrInfoCtx = info.ctx; vrInfoTex = info.tex;
             const map = canvasConfig(800, 600); vrMapCtx = map.ctx; vrMapTex = map.tex;
 
-            const matConfig = { transparent: true, side: THREE.DoubleSide, depthTest: false };
+            // FIX: Removed depthTest: false and changed to depthWrite: false, and added renderOrders
+            const matConfig = { transparent: true, side: THREE.DoubleSide, depthTest: true, depthWrite: false };
             vrControlMesh = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 1.8), new THREE.MeshBasicMaterial({ map: vrControlTex, ...matConfig }));
             vrInfoMesh = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 1.5), new THREE.MeshBasicMaterial({ map: vrInfoTex, ...matConfig }));
             vrMapMesh = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 0.9), new THREE.MeshBasicMaterial({ map: vrMapTex, ...matConfig }));
+
+            vrControlMesh.renderOrder = 10;
+            vrInfoMesh.renderOrder = 10;
+            vrMapMesh.renderOrder = 10;
 
             vrControlMesh.position.set(-1.4, 1.2, -2.2); vrControlMesh.rotation.y = Math.PI / 8;
             vrInfoMesh.position.set(1.4, 1.6, -2.2); vrInfoMesh.rotation.y = -Math.PI / 8;
@@ -489,7 +500,8 @@
 
             ctx.textAlign = 'left'; ctx.fillStyle = '#1C1917'; ctx.fillText(`2. AR BLEND: ${Math.round(currentOpacityVr*100)}%`, 50, 480);
             ctx.fillStyle = 'rgba(123, 46, 36, 0.2)'; ctx.fillRect(50, 530, 700, 10);
-            ctx.fillStyle = '#7B2E24'; ctx.beginPath(); ctx.arc(50 + currentOpacityVr*700, 535, 20, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = (hoveredVRButton === 'opacity' || hoveredVRButton === 'presetSite' || hoveredVRButton === 'presetRender') ? '#a34839' : '#7B2E24'; 
+            ctx.beginPath(); ctx.arc(50 + currentOpacityVr*700, 535, 24, 0, Math.PI*2); ctx.fill();
 
             ctx.fillStyle = currentOpacityVr === 0 ? 'rgba(123,46,36,0.2)' : (hoveredVRButton === 'presetSite' ? 'rgba(123, 46, 36, 0.1)' : 'transparent'); 
             ctx.fillRect(50, 620, 330, 80); ctx.strokeRect(50, 620, 330, 80);
@@ -502,7 +514,8 @@
             ctx.textAlign = 'left'; ctx.fillStyle = '#1C1917'; ctx.fillText(`3. YAW: ${Math.round(currentYawVr)}°`, 50, 840);
             ctx.fillStyle = 'rgba(123, 46, 36, 0.2)'; ctx.fillRect(50, 890, 700, 10);
             const yawPercent = (currentYawVr + 180) / 360;
-            ctx.fillStyle = '#7B2E24'; ctx.beginPath(); ctx.arc(50 + yawPercent*700, 895, 20, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = (hoveredVRButton === 'yaw') ? '#a34839' : '#7B2E24'; 
+            ctx.beginPath(); ctx.arc(50 + yawPercent*700, 895, 24, 0, Math.PI*2); ctx.fill();
 
             ctx.fillStyle = hoveredVRButton === 'exit' ? '#5C2119' : '#7B2E24'; ctx.fillRect(50, 1020, 700, 100);
             ctx.fillStyle = '#EFE7DB'; ctx.textAlign = 'center'; ctx.font = 'bold 35px sans-serif'; 
@@ -519,7 +532,6 @@
             ctx.fillStyle = '#7B2E24'; ctx.font = 'bold 35px sans-serif'; ctx.textAlign = 'left'; ctx.fillText(`LOCATION ${loc.num}`, 50, 100);
             ctx.font = 'bold 70px "Playfair Display", serif'; ctx.fillText(loc.title, 50, 180);
 
-            // Draw Site Plan Image or Fallback
             if (vrImageLoaded) {
                 ctx.drawImage(vrSiteImage, 50, 220, 700, 300);
                 ctx.strokeStyle = 'rgba(123, 46, 36, 0.2)'; ctx.lineWidth = 4; ctx.strokeRect(50, 220, 700, 300);
@@ -544,11 +556,11 @@
             const ctx = vrMapCtx; ctx.clearRect(0,0,800,600);
             drawVintagePanel(ctx, 800, 600, "Navigation Map");
 
-            // Draw Site Plan Image or Fallback
             if (vrImageLoaded) {
                 ctx.drawImage(vrSiteImage, 50, 120, 700, 430);
             } else {
                 ctx.fillStyle = '#ffffff'; ctx.fillRect(50, 120, 700, 430);
+                ctx.fillStyle = '#7B2E24'; ctx.font = '24px sans-serif'; ctx.textAlign = 'center'; ctx.fillText("[ Loading... ]", 400, 335);
             }
             
             exploreLocations.forEach(loc => {
@@ -576,47 +588,48 @@
             const material = new THREE.LineBasicMaterial({ color: 0xff0000 });
 
             function onSelect(e) {
-                if(!vrUIGroup.visible) return; 
+                if(!vrUIGroup || !vrUIGroup.visible) return; 
 
                 workingMatrix.identity().extractRotation(e.target.matrixWorld);
                 raycaster.ray.origin.setFromMatrixPosition(e.target.matrixWorld);
                 raycaster.ray.direction.set(0,0,-1).applyMatrix4(workingMatrix);
 
-                let hits = raycaster.intersectObject(vrControlMesh);
+                let hits = raycaster.intersectObjects([vrControlMesh, vrMapMesh]);
                 if (hits.length > 0) {
-                    const uv = hits[0].uv; const cx = uv.x * 800; const cy = (1 - uv.y) * 1200;
-                    
-                    if(cy >= 250 && cy <= 350) {
-                        if(cx >= 50 && cx <= 380) { activeSchemeVr = 1; syncControlState(); } 
-                        if(cx >= 420 && cx <= 750) { activeSchemeVr = 2; syncControlState(); } 
-                    }
-                    if(cy >= 620 && cy <= 700) {
-                        if(cx >= 50 && cx <= 380) { currentOpacityVr = 0; syncControlState(); } 
-                        if(cx >= 420 && cx <= 750) { currentOpacityVr = 1; syncControlState(); } 
-                    }
-                    if(cy >= 500 && cy <= 580 && cx >= 50 && cx <= 750) { 
-                        currentOpacityVr = Math.max(0, Math.min(1, (cx - 50) / 700)); syncControlState();
-                    }
-                    if(cy >= 860 && cy <= 940 && cx >= 50 && cx <= 750) { 
-                        currentYawVr = ((cx - 50) / 700) * 360 - 180; syncControlState();
-                    }
-                    if(cy >= 1020 && cy <= 1120 && cx >= 50 && cx <= 750) { 
-                        const session = renderer.xr.getSession();
-                        if (session) session.end();
-                    }
-                }
+                    const hit = hits[0];
+                    const uv = hit.uv; 
 
-                hits = raycaster.intersectObject(vrMapMesh);
-                if(hits.length > 0) {
-                    const uv = hits[0].uv; const cx = uv.x * 800; const cy = (1 - uv.y) * 600;
-                    if(cx >= 50 && cx <= 750 && cy >= 120 && cy <= 550) {
-                        let closest = null; let minDist = 9999;
-                        exploreLocations.forEach(loc => {
-                            const px = 50 + (parseFloat(loc.left)/100) * 700; const py = 120 + (parseFloat(loc.top)/100) * 430;
-                            const dist = Math.hypot(px - cx, py - cy);
-                            if(dist < minDist && dist < 40) { minDist = dist; closest = loc; }
-                        });
-                        if(closest) openLocationInViewer(closest);
+                    if (hit.object === vrControlMesh) {
+                        const cx = uv.x * 800; const cy = (1 - uv.y) * 1200;
+                        if(cy >= 250 && cy <= 350) {
+                            if(cx >= 50 && cx <= 380) { activeSchemeVr = 1; syncControlState(); } 
+                            if(cx >= 420 && cx <= 750) { activeSchemeVr = 2; syncControlState(); } 
+                        }
+                        if(cy >= 620 && cy <= 700) {
+                            if(cx >= 50 && cx <= 380) { currentOpacityVr = 0; syncControlState(); } 
+                            if(cx >= 420 && cx <= 750) { currentOpacityVr = 1; syncControlState(); } 
+                        }
+                        if(cy >= 500 && cy <= 580 && cx >= 50 && cx <= 750) { 
+                            currentOpacityVr = Math.max(0, Math.min(1, (cx - 50) / 700)); syncControlState();
+                        }
+                        if(cy >= 860 && cy <= 940 && cx >= 50 && cx <= 750) { 
+                            currentYawVr = ((cx - 50) / 700) * 360 - 180; syncControlState();
+                        }
+                        if(cy >= 1020 && cy <= 1120 && cx >= 50 && cx <= 750) { 
+                            const session = renderer.xr.getSession();
+                            if (session) session.end();
+                        }
+                    } else if (hit.object === vrMapMesh) {
+                        const cx = uv.x * 800; const cy = (1 - uv.y) * 600;
+                        if(cx >= 50 && cx <= 750 && cy >= 120 && cy <= 550) {
+                            let closest = null; let minDist = 9999;
+                            exploreLocations.forEach(loc => {
+                                const px = 50 + (parseFloat(loc.left)/100) * 700; const py = 120 + (parseFloat(loc.top)/100) * 430;
+                                const dist = Math.hypot(px - cx, py - cy);
+                                if(dist < minDist && dist < 40) { minDist = dist; closest = loc; }
+                            });
+                            if(closest) openLocationInViewer(closest);
+                        }
                     }
                 }
             }
@@ -632,7 +645,7 @@
                 controller2.add(new THREE.Line(geometry, material).clone()); 
                 scene.add(controller2);
             } catch (err) {
-                console.warn("Could not initialize VR controllers:", err);
+                console.warn("Could not init VR controllers:", err);
             }
         }
 
@@ -681,14 +694,11 @@
                             });
                         };
                     } else { 
-                        btn.textContent = 'NO VR DETECTED'; 
-                        btn.style.opacity = '0.5';
-                        btn.style.cursor = 'not-allowed';
+                        btn.textContent = 'NO VR DETECTED'; btn.style.opacity = '0.5'; btn.style.cursor = 'not-allowed';
                     }
                 });
             } else {
-                btn.textContent = 'VR REQUIRES HTTPS';
-                btn.style.opacity = '0.5';
+                btn.textContent = 'VR REQUIRES HTTPS'; btn.style.opacity = '0.5';
             }
         }
 
@@ -747,9 +757,9 @@
                             if(cx >= 50 && cx <= 380) currentHoverBtn = 'presetSite';
                             if(cx >= 420 && cx <= 750) currentHoverBtn = 'presetRender';
                         }
-                        else if(cy >= 1020 && cy <= 1120 && cx >= 50 && cx <= 750) {
-                            currentHoverBtn = 'exit';
-                        }
+                        else if(cy >= 500 && cy <= 580 && cx >= 50 && cx <= 750) { currentHoverBtn = 'opacity'; }
+                        else if(cy >= 860 && cy <= 940 && cx >= 50 && cx <= 750) { currentHoverBtn = 'yaw'; }
+                        else if(cy >= 1020 && cy <= 1120 && cx >= 50 && cx <= 750) { currentHoverBtn = 'exit'; }
                     } else if (hit.object === vrMapMesh) {
                         const cx = uv.x * 800; const cy = (1 - uv.y) * 600;
                         if(cx >= 50 && cx <= 750 && cy >= 120 && cy <= 550) {
@@ -761,7 +771,7 @@
                             });
                         }
                     }
-                    break; 
+                    break; // Stop loop after first valid controller hit to prevent hover flickering
                 }
             }
 
