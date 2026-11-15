@@ -256,15 +256,15 @@
 
         // --- DATA ---
         const exploreLocations = [
-            { id: 1, num: "01", title: "Central spine", top: "75%", left: "55%", img: "explore-page-side-photo.png", desc: "The grand gateway to Poorna Market, redesigned to welcome pedestrians." },
-            { id: 2, num: "02", title: "Groceries area", top: "45%", left: "54%", img: "explore-page-side-photo.png", desc: "The historical heart of the market with a new vibrant public plaza." },
-            { id: 3, num: "03", title: "Main Gateway", top: "60%", left: "55%", img: "explore-page-side-photo.png", desc: "A widened, pedestrian-friendly central corridor with integrated seating." },
-            { id: 4, num: "04", title: "Vegetable area", top: "62%", left: "42%", img: "explore-page-side-photo.png", desc: "Upgraded vendor stalls with improved natural ventilation and modular racks." },
-            { id: 5, num: "05", title: "Pavilions", top: "60%", left: "70%", img: "explore-page-side-photo.png", desc: "A climate-controlled sub-market featuring dedicated waste management." },
-            { id: 6, num: "06", title: "Admin Area", top: "40%", left: "38%", img: "explore-page-side-photo.png", desc: "A fragrant precinct situated near the temple axis with shaded walkways." },
-            { id: 7, num: "07", title: "Fish and Meat area", top: "44%", left: "66%", img: "explore-page-side-photo.png", desc: "Organized permanent retail units for dry goods and textiles." },
-            { id: 8, num: "08", title: "Claypot and Bamboo area", top: "30%", left: "70%", img: "explore-page-side-photo.png", desc: "Culinary destination offering local street food in a safe environment." },
-            { id: 9, num: "09", title: "Multipurpose area", top: "23%", left: "51%", img: "explore-page-side-photo.png", desc: "Backend logistics hub managing deliveries without disrupting the market." }
+            { id: 1, num: "01", title: "Central spine", top: "75%", left: "55%", img: "explore-page-side-photo.png", pano: "panorama_12.jpg", desc: "The grand gateway to Poorna Market, redesigned to welcome pedestrians." },
+            { id: 2, num: "02", title: "Groceries area", top: "45%", left: "54%", img: "explore-page-side-photo.png", pano: "panorama_9.jpg", desc: "The historical heart of the market with a new vibrant public plaza." },
+            { id: 3, num: "03", title: "Main Gateway", top: "60%", left: "55%", img: "explore-page-side-photo.png", pano: "panorama_12.jpg", desc: "A widened, pedestrian-friendly central corridor with integrated seating." },
+            { id: 4, num: "04", title: "Vegetable area", top: "62%", left: "42%", img: "explore-page-side-photo.png", pano: "option1.jpg", desc: "Upgraded vendor stalls with improved natural ventilation and modular racks." },
+            { id: 5, num: "05", title: "Pavilions", top: "60%", left: "70%", img: "explore-page-side-photo.png", pano: "panorama_7.jpg", desc: "A climate-controlled sub-market featuring dedicated waste management." },
+            { id: 6, num: "06", title: "Admin Area", top: "40%", left: "38%", img: "explore-page-side-photo.png", pano: "panorama_11.jpg", desc: "A fragrant precinct situated near the temple axis with shaded walkways." },
+            { id: 7, num: "07", title: "Fish and Meat area", top: "44%", left: "66%", img: "explore-page-side-photo.png", pano: "panorama_10.jpg", desc: "Organized permanent retail units for dry goods and textiles." },
+            { id: 8, num: "08", title: "Claypot and Bamboo area", top: "30%", left: "70%", img: "explore-page-side-photo.png", pano: "panorama_5.jpg", desc: "Culinary destination offering local street food in a safe environment." },
+            { id: 9, num: "09", title: "Multipurpose area", top: "23%", left: "51%", img: "explore-page-side-photo.png", pano: "panorama_8.jpg", desc: "Backend logistics hub managing deliveries without disrupting the market." }
         ];
 
         let currentLocationData = exploreLocations[0];
@@ -342,24 +342,25 @@
                 if (typeof siteSphere !== 'undefined' && siteSphere && renderMaterial) {
                     const tLoader = new THREE.TextureLoader();
                     let tempSiteTex = createFallbackTexture('#1e293b', `${loc.title.toUpperCase()} (EXISTING)`);
-                    let tempOpt1Tex = createFallbackTexture('#0f766e', `${loc.title.toUpperCase()} (SCHEME A)`);
-                    let tempOpt2Tex = createFallbackTexture('#4338ca', `${loc.title.toUpperCase()} (SCHEME B)`);
+                    let tempOptTex = createFallbackTexture('#0f766e', `${loc.title.toUpperCase()} (PROPOSED)`);
                     
                     siteSphere.material.map = tempSiteTex;
-                    scheme1Texture = tempOpt1Tex;
-                    scheme2Texture = tempOpt2Tex;
+                    scheme1Texture = tempOptTex;
+                    scheme2Texture = tempOptTex;
 
-                    tLoader.load('site.jpg', (tex) => { siteSphere.material.map = tex; siteSphere.material.needsUpdate = true; }, undefined, () => {});
-                    tLoader.load('option1.jpg', (tex) => { 
-                        scheme1Texture = tex; 
-                        if(activeSchemeVr === 1) { renderMaterial.map = scheme1Texture; renderMaterial.needsUpdate = true; }
-                    }, undefined, () => {});
-                    tLoader.load('option2.jpg', (tex) => { 
-                        scheme2Texture = tex; 
-                        if(activeSchemeVr === 2) { renderMaterial.map = scheme2Texture; renderMaterial.needsUpdate = true; }
+                    // Load Site context image
+                    tLoader.load('site.jpg', (tex) => { 
+                        siteSphere.material.map = tex; 
+                        siteSphere.material.needsUpdate = true; 
                     }, undefined, () => {});
                     
-                    renderMaterial.map = activeSchemeVr === 1 ? scheme1Texture : scheme2Texture;
+                    // Load specific location Panorama and apply it to BOTH Scheme A and Scheme B
+                    tLoader.load(loc.pano, (tex) => { 
+                        scheme1Texture = tex; 
+                        scheme2Texture = tex;
+                        renderMaterial.map = activeSchemeVr === 1 ? scheme1Texture : scheme2Texture; 
+                        renderMaterial.needsUpdate = true; 
+                    }, undefined, () => {});
                 }
                 
                 if(typeof updateVRInfoCanvas === 'function') {
