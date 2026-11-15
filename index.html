@@ -68,7 +68,7 @@
         body.viewer-mode .nav-link, body.viewer-mode header .logo-text, body.viewer-mode header i { color: #EFE7DB; }
         body.viewer-mode .nav-link.active::after { background-color: #7B2E24; }
 
-        #webgl-canvas { width: 100%; height: 100%; display: block; touch-action: none; }
+        #webgl-canvas { width: 100%; height: 100%; display: block; }
 
         /* Vintage Floating Panels */
         .vintage-panel {
@@ -163,7 +163,7 @@
                 <div class="w-[53%] relative flex items-center justify-center p-2">
                     <div class="relative inline-block max-w-full max-h-full">
                         <!-- Main Plan Image -->
-                        <img src="explore-page-site-plan.png" id="key-plan-img" class="max-w-full max-h-full object-contain mix-blend-multiply" alt="Map Plan" onerror="this.src='https://placehold.co/800x600/EFE7DB/7B2E24?text=Site+Plan'"/>
+                        <img src="explore-page-site-plan.png" id="key-plan-img" class="max-w-full max-h-full object-contain mix-blend-multiply" alt="Map Plan"/>
                         <div id="map-pins-container" class="absolute top-0 left-0 w-full h-full pointer-events-none"></div>
                     </div>
                 </div>
@@ -214,7 +214,7 @@
                 <div class="text-[0.6rem] tracking-[0.2em] uppercase text-brand-red mb-2 font-bold" id="desc-num">00</div>
                 <h4 id="desc-title" class="font-serif text-lg text-brand-red leading-tight mb-3 tracking-wide">Select a Zone</h4>
                 <div class="w-full h-24 bg-[#EFE7DB] rounded-sm mb-3 overflow-hidden relative shrink-0">
-                    <img id="desc-img" src="explore-page-site-plan.png" class="w-full h-full object-cover mix-blend-multiply" alt="Zone Image" onerror="this.src='https://placehold.co/400x300/EFE7DB/7B2E24?text=Zone'">
+                    <img id="desc-img" src="explore-page-site-plan.png" class="w-full h-full object-cover mix-blend-multiply" alt="Zone Image">
                 </div>
                 <p id="desc-text" class="text-[0.6rem] text-brand-dark leading-relaxed">Navigate via the Explore tab to view specific historical context and architectural interventions applied to this area.</p>
             </div>
@@ -227,7 +227,7 @@
                 </div>
                 <div class="relative w-full aspect-[4/3] bg-white rounded-sm border border-black/5 overflow-hidden">
                     <!-- Viewer Mini Map Image -->
-                    <img src="explore-page-site-plan.png" class="w-full h-full object-contain mix-blend-multiply" alt="Mini Map" onerror="this.src='https://placehold.co/400x300/EFE7DB/7B2E24?text=Map'"/>
+                    <img src="explore-page-site-plan.png" class="w-full h-full object-contain mix-blend-multiply" alt="Mini Map" />
                     <div id="mini-map-pins" class="absolute inset-0 pointer-events-none"></div>
                 </div>
             </div>
@@ -251,20 +251,19 @@
             if(typeof updateVRInfoCanvas === 'function' && vrInfoCtx) updateVRInfoCanvas(currentLocationData);
             if(typeof updateVRMapCanvas === 'function' && vrMapCtx) updateVRMapCanvas();
         };
-        vrSiteImage.onerror = () => { vrImageLoaded = false; };
         vrSiteImage.src = 'explore-page-site-plan.png';
 
         // --- DATA ---
         const exploreLocations = [
-            { id: 1, num: "01", title: "Main Gateway", top: "75%", left: "55%", img: "explore-page-side-photo.png", desc: "The grand gateway to Poorna Market, redesigned to welcome pedestrians." },
+            { id: 1, num: "01", title: "Central spine", top: "75%", left: "55%", img: "explore-page-side-photo.png", desc: "The grand gateway to Poorna Market, redesigned to welcome pedestrians." },
             { id: 2, num: "02", title: "Groceries area", top: "45%", left: "54%", img: "explore-page-side-photo.png", desc: "The historical heart of the market with a new vibrant public plaza." },
-            { id: 3, num: "03", title: "Central spine", top: "60%", left: "55%", img: "explore-page-side-photo.png", desc: "A widened, pedestrian-friendly central corridor with integrated seating." },
+            { id: 3, num: "03", title: "Main Gateway", top: "60%", left: "55%", img: "explore-page-side-photo.png", desc: "A widened, pedestrian-friendly central corridor with integrated seating." },
             { id: 4, num: "04", title: "Vegetable area", top: "62%", left: "42%", img: "explore-page-side-photo.png", desc: "Upgraded vendor stalls with improved natural ventilation and modular racks." },
-            { id: 5, num: "05", title: "Pavillions", top: "60%", left: "70%", img: "explore-page-side-photo.png", desc: "A climate-controlled sub-market featuring dedicated waste management." },
-            { id: 6, num: "06", title: "Admin Area", top: "40%", left: "38%", img: "explore-page-side-photo.png", desc: "A fragrant precinct situated near the temple axis with shaded walkways." },
-            { id: 7, num: "07", title: "Fish and Meat area", top: "44%", left: "66%", img: "explore-page-side-photo.png", desc: "Organized permanent retail units for dry goods and textiles." },
-            { id: 8, num: "08", title: "Claypot and Bamboo area", top: "30%", left: "70%", img: "explore-page-side-photo.png", desc: "Culinary destination offering local street food in a safe environment." },
-            { id: 9, num: "09", title: "Multipurpose area", top: "23%", left: "51%", img: "explore-page-side-photo.png", desc: "Backend logistics hub managing deliveries without disrupting the market." }
+            { id: 5, num: "05", title: "Fish & Meat Zone", top: "60%", left: "70%", img: "explore-page-side-photo.png", desc: "A climate-controlled sub-market featuring dedicated waste management." },
+            { id: 6, num: "06", title: "Flower & Pooja", top: "40%", left: "38%", img: "explore-page-side-photo.png", desc: "A fragrant precinct situated near the temple axis with shaded walkways." },
+            { id: 7, num: "07", title: "Retail Stalls", top: "44%", left: "66%", img: "explore-page-side-photo.png", desc: "Organized permanent retail units for dry goods and textiles." },
+            { id: 8, num: "08", title: "Food Court", top: "30%", left: "70%", img: "explore-page-side-photo.png", desc: "Culinary destination offering local street food in a safe environment." },
+            { id: 9, num: "09", title: "Service Area", top: "23%", left: "51%", img: "explore-page-side-photo.png", desc: "Backend logistics hub managing deliveries without disrupting the market." }
         ];
 
         let currentLocationData = exploreLocations[0];
@@ -294,7 +293,7 @@
 
                     const card = document.createElement('div'); card.className = 'explore-card group bg-white relative';
                     card.onclick = () => initiateLocationSwap(loc);
-                    card.innerHTML = `<div class="relative w-full h-20 overflow-hidden mb-2"><img src="${loc.img}" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/400x300/EFE7DB/7B2E24?text=Image'"></div>
+                    card.innerHTML = `<div class="relative w-full h-20 overflow-hidden mb-2"><img src="${loc.img}" class="w-full h-full object-cover" onerror="this.src='explore-page-site-plan.png'"></div>
                                       <div class="flex items-center gap-3 px-2 pb-1"><div class="w-5 h-5 rounded-full bg-brand-red text-white flex items-center justify-center text-[0.55rem] font-bold">${loc.num}</div><span class="text-[0.65rem] font-semibold">${loc.title}</span></div>`;
                     cardsContainer.appendChild(card);
                 });
@@ -468,7 +467,6 @@
             canvas.addEventListener('pointerdown', onPointerDown); 
             canvas.addEventListener('pointermove', onPointerMove);
             canvas.addEventListener('pointerup', onPointerUp); 
-            canvas.addEventListener('pointercancel', onPointerUp);
             canvas.addEventListener('wheel', onDocumentMouseWheel);
         }
 
@@ -753,208 +751,144 @@
             }
         }
 
-        // --- COMPLETED METHODS (Fixed from cut-off) ---
-
         function createFallbackTexture(bgColor, label) {
-            const canvas = document.createElement('canvas'); 
-            canvas.width = 2048; 
-            canvas.height = 1024;
-            const ctx = canvas.getContext('2d');
-            
-            ctx.fillStyle = bgColor; 
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
-            ctx.strokeStyle = 'rgba(255,255,255,0.1)'; 
-            ctx.lineWidth = 4;
-            for(let i=0; i<canvas.width; i+=100) { ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,canvas.height); ctx.stroke(); }
-            for(let i=0; i<canvas.height; i+=100) { ctx.beginPath(); ctx.moveTo(0,i); ctx.lineTo(canvas.width,i); ctx.stroke(); }
-            
-            ctx.fillStyle = 'rgba(255,255,255,0.7)'; 
-            ctx.font = 'bold 80px "Inter", sans-serif'; 
-            ctx.textAlign = 'center'; 
-            ctx.textBaseline = 'middle';
-            
-            for(let i=0; i<4; i++) { 
-                ctx.fillText(label, (canvas.width/4)*i + 250, canvas.height/2); 
-            }
-            
-            const tex = new THREE.CanvasTexture(canvas);
-            tex.mapping = THREE.EquirectangularReflectionMapping;
-            return tex;
+            const canvas = document.createElement('canvas'); canvas.width = 2048; canvas.height = 1024; const ctx = canvas.getContext('2d');
+            ctx.fillStyle = bgColor; ctx.fillRect(0, 0, canvas.width, canvas.height); ctx.fillStyle = '#ffffff'; ctx.font = 'bold 72px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(label, canvas.width / 2, canvas.height / 2 - 20); return new THREE.CanvasTexture(canvas);
         }
-
-        // Camera Drag Controls
-        function onPointerDown(event) {
-            if(document.body.classList.contains('viewer-mode') === false) return;
-            isUserInteracting = true;
-            onPointerDownPointerX = event.clientX;
-            onPointerDownPointerY = event.clientY;
-            onPointerDownLon = lon;
-            onPointerDownLat = lat;
-        }
-
-        function onPointerMove(event) {
-            if(document.body.classList.contains('viewer-mode') === false) return;
-            if (isUserInteracting) {
-                lon = (onPointerDownPointerX - event.clientX) * 0.1 + onPointerDownLon;
-                lat = (event.clientY - onPointerDownPointerY) * 0.1 + onPointerDownLat;
-            }
-        }
-
-        function onPointerUp() {
-            isUserInteracting = false;
-        }
-
-        function onDocumentMouseWheel(event) {
-            if(document.body.classList.contains('viewer-mode') === false) return;
-            const fov = camera.fov + event.deltaY * 0.05;
-            camera.fov = THREE.MathUtils.clamp(fov, 10, 100);
-            camera.updateProjectionMatrix();
-        }
-
-        function onWindowResize() {
+        
+        function onPointerDown(e) { if(!document.body.classList.contains('viewer-mode')) return; isUserInteracting = true; onPointerDownPointerX = e.clientX; onPointerDownPointerY = e.clientY; onPointerDownLon = lon; onPointerDownLat = lat; }
+        function onPointerMove(e) { if(isUserInteracting) { lon = (onPointerDownPointerX - e.clientX) * 0.1 + onPointerDownLon; lat = (e.clientY - onPointerDownPointerY) * 0.1 + onPointerDownLat; } }
+        function onPointerUp() { isUserInteracting = false; }
+        function onDocumentMouseWheel(e) { if(!document.body.classList.contains('viewer-mode')) return; camera.fov = THREE.MathUtils.clamp(camera.fov + e.deltaY * 0.05, 30, 90); camera.updateProjectionMatrix(); }
+        function onWindowResize() { 
             if(camera && renderer) {
-                camera.aspect = window.innerWidth / window.innerHeight;
-                camera.updateProjectionMatrix();
-                renderer.setSize(window.innerWidth, window.innerHeight);
+                camera.aspect = window.innerWidth / window.innerHeight; 
+                camera.updateProjectionMatrix(); 
+                renderer.setSize(window.innerWidth, window.innerHeight); 
             }
         }
 
-        function animate3D() {
-            if(renderer) {
-                renderer.setAnimationLoop(renderLoop);
+        function handleVRIntersections() {
+            if (!renderer || !renderer.xr.isPresenting || !vrUIGroup || !vrUIGroup.visible) {
+                if(vrCursor && vrCursor.visible) vrCursor.visible = false;
+                return;
+            }
+            
+            // Continuous Drag Handling for Sliders
+            if (activeDragController) {
+                workingMatrix.identity().extractRotation(activeDragController.matrixWorld);
+                raycaster.ray.origin.setFromMatrixPosition(activeDragController.matrixWorld);
+                raycaster.ray.direction.set(0,0,-1).applyMatrix4(workingMatrix);
+                let dragHits = raycaster.intersectObject(vrControlMesh);
+                if (dragHits.length > 0) {
+                    const cx = dragHits[0].uv.x * 800;
+                    let val = Math.max(0, Math.min(1, (cx - 50) / 700));
+                    if (activeDragType === 'opacity') { currentOpacityVr = val; }
+                    else if (activeDragType === 'yaw') { currentYawVr = val * 360 - 180; }
+                    syncControlState();
+                }
+            }
+
+            let currentHoverBtn = null;
+            let currentHoverPin = null;
+            let hitFound = false;
+
+            const controllers = [controller1, controller2].filter(c => c);
+
+            for (let c of controllers) {
+                workingMatrix.identity().extractRotation(c.matrixWorld);
+                raycaster.ray.origin.setFromMatrixPosition(c.matrixWorld);
+                raycaster.ray.direction.set(0,0,-1).applyMatrix4(workingMatrix);
+
+                let hits = raycaster.intersectObjects([vrControlMesh, vrMapMesh]);
+                if (hits.length > 0) {
+                    const hit = hits[0];
+                    vrCursor.position.copy(hit.point);
+                    vrCursor.position.add(raycaster.ray.direction.clone().multiplyScalar(-0.02)); 
+                    vrCursor.lookAt(camera.position);
+                    vrCursor.visible = true;
+                    hitFound = true;
+
+                    const uv = hit.uv;
+                    
+                    if (hit.object === vrControlMesh) {
+                        const cx = uv.x * 800; const cy = (1 - uv.y) * 1200;
+                        if(cy >= 250 && cy <= 350) {
+                            if(cx >= 50 && cx <= 380) currentHoverBtn = 'scheme1';
+                            if(cx >= 420 && cx <= 750) currentHoverBtn = 'scheme2';
+                        }
+                        else if(cy >= 620 && cy <= 700) {
+                            if(cx >= 50 && cx <= 380) currentHoverBtn = 'presetSite';
+                            if(cx >= 420 && cx <= 750) currentHoverBtn = 'presetRender';
+                        }
+                        else if(cy >= 500 && cy <= 580 && cx >= 50 && cx <= 750) { currentHoverBtn = 'opacity'; }
+                        else if(cy >= 860 && cy <= 940 && cx >= 50 && cx <= 750) { currentHoverBtn = 'yaw'; }
+                        else if(cy >= 1020 && cy <= 1120 && cx >= 50 && cx <= 750) { currentHoverBtn = 'exit'; }
+                    } else if (hit.object === vrMapMesh) {
+                        const cx = uv.x * 800; const cy = (1 - uv.y) * 600;
+                        if(cx >= 50 && cx <= 750 && cy >= 120 && cy <= 550) {
+                            let minDist = 9999;
+                            exploreLocations.forEach(loc => {
+                                const px = 50 + (parseFloat(loc.left)/100) * 700; const py = 120 + (parseFloat(loc.top)/100) * 430;
+                                const dist = Math.hypot(px - cx, py - cy);
+                                if(dist < minDist && dist < 40) { minDist = dist; currentHoverPin = loc.id; }
+                            });
+                        }
+                    }
+                    break; // Stop loop after first valid controller hit to prevent hover flickering
+                }
+            }
+
+            if (!hitFound && vrCursor) vrCursor.visible = false;
+
+            if (hoveredVRButton !== currentHoverBtn) {
+                hoveredVRButton = currentHoverBtn;
+                updateVRControlCanvas();
+            }
+            if (hoveredVRMapPin !== currentHoverPin) {
+                hoveredVRMapPin = currentHoverPin;
+                updateVRMapCanvas();
             }
         }
 
-        function renderLoop() {
-            if(!document.body.classList.contains('viewer-mode')) return;
-
-            // Handle cinematic fade transitions
-            if (transitionPhase === 'fadeOut') {
-                transitionProgress += 0.05;
-                if(transitionMesh) transitionMesh.material.opacity = transitionProgress;
-                if(transitionProgress >= 1) {
-                    transitionPhase = 'fadeIn';
-                    if(pendingLocation) {
-                        executeLocationSwap(pendingLocation);
-                        pendingLocation = null;
-                    }
-                }
-            } else if (transitionPhase === 'fadeIn') {
-                transitionProgress -= 0.05;
-                if(transitionMesh) transitionMesh.material.opacity = transitionProgress;
-                if(transitionProgress <= 0) {
-                    transitionProgress = 0;
-                    transitionPhase = 'idle';
-                }
-            }
-
-            if (renderer.xr.isPresenting) {
-                // HMD View
-                document.querySelectorAll('.desktop-only').forEach(el => el.style.display = 'none');
-                if(vrUIGroup) vrUIGroup.visible = true;
-
-                if (activeDragController && activeDragType) {
-                    workingMatrix.identity().extractRotation(activeDragController.matrixWorld);
-                    raycaster.ray.origin.setFromMatrixPosition(activeDragController.matrixWorld);
-                    raycaster.ray.direction.set(0,0,-1).applyMatrix4(workingMatrix);
-                    let hits = raycaster.intersectObject(vrControlMesh);
-                    
-                    if(hits.length > 0) {
-                        const cx = hits[0].uv.x * 800;
-                        if(activeDragType === 'opacity') {
-                            currentOpacityVr = THREE.MathUtils.clamp((cx - 50) / 700, 0, 1);
-                            syncControlState();
-                        } else if (activeDragType === 'yaw') {
-                            currentYawVr = THREE.MathUtils.clamp(((cx - 50) / 700) * 360 - 180, -180, 180);
-                            syncControlState();
+        function animate3D() { renderer.setAnimationLoop(render); }
+        
+        function render() {
+            if(document.body.classList.contains('viewer-mode')) {
+                // Cinematic Fade Transition Logic
+                if (transitionPhase === 'fadeOut') {
+                    transitionProgress += 0.05; // Fade duration
+                    if (transitionProgress >= 1) {
+                        transitionProgress = 1;
+                        if (pendingLocation) {
+                            executeLocationSwap(pendingLocation);
+                            pendingLocation = null;
                         }
+                        transitionPhase = 'fadeIn';
                     }
+                    if (transitionMesh) transitionMesh.material.opacity = transitionProgress;
+                } else if (transitionPhase === 'fadeIn') {
+                    transitionProgress -= 0.05;
+                    if (transitionProgress <= 0) {
+                        transitionProgress = 0;
+                        transitionPhase = 'idle';
+                    }
+                    if (transitionMesh) transitionMesh.material.opacity = transitionProgress;
                 }
 
-                // Handle visual hover states in VR
-                let newHoverBtn = null;
-                let newHoverPin = null;
-                let cursorActive = false;
-
-                [controller1, controller2].forEach(c => {
-                    if(!c) return;
-                    workingMatrix.identity().extractRotation(c.matrixWorld);
-                    raycaster.ray.origin.setFromMatrixPosition(c.matrixWorld);
-                    raycaster.ray.direction.set(0,0,-1).applyMatrix4(workingMatrix);
-
-                    let hits = raycaster.intersectObjects([vrControlMesh, vrMapMesh]);
-                    if(hits.length > 0) {
-                        cursorActive = true;
-                        vrCursor.position.copy(hits[0].point);
-                        vrCursor.position.add(raycaster.ray.direction.clone().multiplyScalar(-0.02));
-                        vrCursor.quaternion.copy(hits[0].object.quaternion);
-                        vrCursor.visible = true;
-
-                        const uv = hits[0].uv;
-                        if(hits[0].object === vrControlMesh && !activeDragType) {
-                            const cx = uv.x * 800; const cy = (1 - uv.y) * 1200;
-                            if(cy >= 250 && cy <= 350) {
-                                if(cx >= 50 && cx <= 380) newHoverBtn = 'scheme1';
-                                if(cx >= 420 && cx <= 750) newHoverBtn = 'scheme2';
-                            }
-                            if(cy >= 500 && cy <= 580) newHoverBtn = 'opacity';
-                            if(cy >= 620 && cy <= 700) {
-                                if(cx >= 50 && cx <= 380) newHoverBtn = 'presetSite';
-                                if(cx >= 420 && cx <= 750) newHoverBtn = 'presetRender';
-                            }
-                            if(cy >= 860 && cy <= 940) newHoverBtn = 'yaw';
-                            if(cy >= 1020 && cy <= 1120) newHoverBtn = 'exit';
-                        } else if (hits[0].object === vrMapMesh && !activeDragType) {
-                             const cx = uv.x * 800; const cy = (1 - uv.y) * 600;
-                             let minDist = 9999;
-                             exploreLocations.forEach(loc => {
-                                 const px = 50 + (parseFloat(loc.left)/100) * 700; const py = 120 + (parseFloat(loc.top)/100) * 430;
-                                 const dist = Math.hypot(px - cx, py - cy);
-                                 if(dist < minDist && dist < 40) { minDist = dist; newHoverPin = loc.id; }
-                             });
-                        }
-                    }
-                });
-
-                if(!cursorActive && vrCursor) vrCursor.visible = false;
-
-                if(hoveredVRButton !== newHoverBtn || hoveredVRMapPin !== newHoverPin) {
-                    hoveredVRButton = newHoverBtn;
-                    hoveredVRMapPin = newHoverPin;
-                    updateVRControlCanvas();
-                    updateVRMapCanvas();
-                }
-
-            } else {
-                // Desktop View 2D screen interactions
-                document.querySelectorAll('.desktop-only').forEach(el => el.style.display = 'block');
-                if(vrUIGroup) vrUIGroup.visible = false;
-
-                if (isUserInteracting) {
+                if (renderer.xr.isPresenting) {
+                    if(vrUIGroup) vrUIGroup.visible = true;
+                    document.querySelectorAll('.desktop-only').forEach(el => el.style.display = 'none');
+                    handleVRIntersections();
+                } else {
+                    if(vrUIGroup) vrUIGroup.visible = false;
                     lat = Math.max(-85, Math.min(85, lat));
-                    let phi = THREE.MathUtils.degToRad(90 - lat);
-                    let theta = THREE.MathUtils.degToRad(lon);
-
-                    camera.target.x = 500 * Math.sin(phi) * Math.cos(theta);
-                    camera.target.y = 500 * Math.cos(phi);
-                    camera.target.z = 500 * Math.sin(phi) * Math.sin(theta);
-                    camera.lookAt(camera.target);
-                } else if (transitionPhase === 'idle') {
-                    // Slow rotation when idle
-                    lon -= 0.05;
-                    lat = Math.max(-85, Math.min(85, lat));
-                    let phi = THREE.MathUtils.degToRad(90 - lat);
-                    let theta = THREE.MathUtils.degToRad(lon);
-                    
-                    camera.target.x = 500 * Math.sin(phi) * Math.cos(theta);
-                    camera.target.y = 500 * Math.cos(phi);
-                    camera.target.z = 500 * Math.sin(phi) * Math.sin(theta);
+                    const phi = THREE.MathUtils.degToRad(90 - lat); const theta = THREE.MathUtils.degToRad(lon);
+                    camera.target.x = 500 * Math.sin(phi) * Math.cos(theta); camera.target.y = 500 * Math.cos(phi); camera.target.z = 500 * Math.sin(phi) * Math.sin(theta);
                     camera.lookAt(camera.target);
                 }
+                renderer.render(scene, camera);
             }
-
-            renderer.render(scene, camera);
         }
     </script>
 </body>
